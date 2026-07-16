@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Apply — Drix Tech Talent</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<style>
+body{display:flex;height:100vh;overflow:hidden;}
+.right{flex:1;padding:52px 56px;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;background:var(--bg);height:100vh;}
+.left{width:420px;min-height:100vh;flex-shrink:0;position:sticky;top:0;height:100vh;overflow:hidden;
+  background:url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80') center/cover no-repeat;
+}
+.left-overlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(11,12,16,0.88),rgba(124,110,247,0.55));}
+.left-content{position:relative;z-index:1;padding:52px 44px;height:100%;display:flex;flex-direction:column;justify-content:center;}
+.left-logo{font-size:1.35rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:52px;display:block;letter-spacing:-0.02em;}
+.left h2{font-size:1.9rem;margin-bottom:14px;line-height:1.2;}
+.left p{color:rgba(240,240,245,0.7);margin-bottom:36px;line-height:1.85;font-size:0.92rem;}
+.perk{display:flex;align-items:flex-start;gap:13px;margin-bottom:18px;}
+.perk-ic{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:rgba(124,110,247,0.25);border:1px solid rgba(124,110,247,0.35);display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.perk-text strong{display:block;font-size:0.88rem;margin-bottom:2px;}
+.perk-text span{font-size:0.76rem;color:rgba(240,240,245,0.6);}
+.left-foot{margin-top:auto;padding-top:32px;font-size:0.7rem;color:rgba(240,240,245,0.45);}
+.form-wrap{width:100%;max-width:600px;}
+.back-link{color:var(--muted);font-size:0.82rem;display:inline-flex;align-items:center;gap:6px;margin-bottom:28px;transition:var(--trans);}
+.back-link:hover{color:var(--text);}
+.step-bar{display:flex;gap:6px;margin-bottom:32px;align-items:center;}
+.step-seg{height:4px;border-radius:2px;transition:all .35s ease;}
+.step-seg.done{background:var(--accent);flex:1;}
+.step-seg.active{background:var(--grad);flex:2;}
+.step-seg.todo{background:var(--border2);flex:1;}
+.step-label{font-size:0.72rem;color:var(--muted);font-weight:500;}
+.step-slide{display:none;animation:slideIn .35s ease;}
+.step-slide.active{display:block;}
+@keyframes slideIn{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:translateX(0);}}
+@keyframes slideBack{from{opacity:0;transform:translateX(-24px);}to{opacity:1;transform:translateX(0);}}
+.step-slide.back{animation:slideBack .35s ease;}
+.photo-upload-wrap{text-align:center;margin-bottom:24px;}
+.photo-circle{width:90px;height:90px;border-radius:50%;background:var(--surface2);border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 12px;cursor:pointer;transition:var(--trans);overflow:hidden;position:relative;}
+.photo-circle:hover{border-color:var(--accent);background:rgba(124,110,247,0.08);}
+.photo-circle img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.photo-hint{font-size:0.76rem;color:var(--muted);}
+.epay-box{background:rgba(124,110,247,0.07);border:1px solid rgba(124,110,247,0.2);border-radius:var(--r);padding:14px 16px;margin-bottom:20px;font-size:0.82rem;color:var(--muted);line-height:1.6;}
+.epay-box strong{color:var(--accent2);}
+.step-nav{display:flex;justify-content:space-between;margin-top:28px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* Payment banner */
+.pay-banner{background:linear-gradient(135deg,rgba(124,110,247,0.12),rgba(167,139,250,0.06));border:1px solid rgba(124,110,247,0.25);border-radius:var(--r);padding:16px 18px;margin-bottom:22px;display:none;}
+.pay-banner.show{display:flex;align-items:center;gap:14px;}
+.pay-banner-icon{font-size:1.6rem;flex-shrink:0;}
+.pay-banner-text strong{display:block;font-size:0.9rem;font-weight:700;margin-bottom:2px;}
+.pay-banner-text span{font-size:0.78rem;color:var(--muted);}
+.pay-amount{margin-left:auto;font-size:1.4rem;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;}
+</style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="left">
+  <div class="left-overlay"></div>
+  <div class="left-content">
+    <a href="/" class="left-logo">DRIX Tech Talent</a>
+    <h2>Join Thousands of Tech Talents</h2>
+    <p>Free, world-class training in 13 tech tracks. Build real skills. Join a powerful community.</p>
+    <div class="perk"><div class="perk-ic">🎓</div><div class="perk-text"><strong>Free World-Class Training</strong><span>Access premium courses at zero cost</span></div></div>
+    <div class="perk"><div class="perk-ic">🏆</div><div class="perk-text"><strong>Earn Points & Rankings</strong><span>Compete on the national leaderboard</span></div></div>
+    <div class="perk"><div class="perk-ic">👥</div><div class="perk-text"><strong>Vibrant Community</strong><span>Connect with peers across Nigeria</span></div></div>
+    <div class="perk"><div class="perk-ic">📜</div><div class="perk-text"><strong>Get Certified</strong><span>Unique verifiable hardcopy certificate</span></div></div>
+    <div class="left-foot">Built by Drix Software Foundation · Sponsored by ePayBillz Telecomm</div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right">
+  <div class="form-wrap">
+    <a href="/" class="back-link">← Back to Home</a>
+    <h1 style="font-size:1.9rem;margin-bottom:6px;letter-spacing:-0.02em;">Fellowship Application</h1>
+    <p style="color:var(--muted);font-size:0.88rem;margin-bottom:26px;" id="freeTag">Completely free. Open to all Nigerians.</p>
+
+    <div class="step-bar" id="stepBar">
+      <div class="step-seg active" id="seg1"></div>
+      <div class="step-seg todo" id="seg2"></div>
+      <div class="step-seg todo" id="seg3"></div>
+      <span class="step-label" id="stepLabel">Step 1 of 3</span>
+    </div>
+
+    <div id="alertBox" class="alert"></div>
+
+    <form id="regForm" autocomplete="off">
+
+      <!-- STEP 1 -->
+      <div class="step-slide active" id="step1">
+        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:22px;font-weight:500;">Personal Information</p>
+        <div class="photo-upload-wrap">
+          <div class="photo-circle" id="photoCircle" onclick="document.getElementById('photoInput').click()">
+            <span id="photoPlaceholder">📷</span>
+            <img id="photoPreview" src="" alt="" style="display:none;"/>
+          </div>
+          <div class="photo-hint">Upload profile photo (optional)</div>
+          <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="previewPhoto(this)"/>
+        </div>
+        <div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="form-control" id="full_name" placeholder="e.g. Chukwuemeka Okafor" required/></div>
+        <div class="grid-2">
+          <div class="form-group"><label class="form-label">Email Address *</label><input type="email" class="form-control" id="email" placeholder="you@example.com" required/></div>
+          <div class="form-group"><label class="form-label">Phone Number</label><input type="tel" class="form-control" id="phone" placeholder="08012345678"/></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label class="form-label">Gender</label>
+            <select class="form-control" id="gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Prefer not to say</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" class="form-control" id="date_of_birth"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">State of Residence *</label>
+          <select class="form-control" id="state" required>
+            <option value="">Select state</option>
+            <option>Abia</option><option>Adamawa</option><option>Akwa Ibom</option><option>Anambra</option><option>Bauchi</option><option>Bayelsa</option><option>Benue</option><option>Borno</option><option>Cross River</option><option>Delta</option><option>Ebonyi</option><option>Edo</option><option>Ekiti</option><option>Enugu</option><option>FCT - Abuja</option><option>Gombe</option><option>Imo</option><option>Jigawa</option><option>Kaduna</option><option>Kano</option><option>Katsina</option><option>Kebbi</option><option>Kogi</option><option>Kwara</option><option>Lagos</option><option>Nasarawa</option><option>Niger</option><option>Ogun</option><option>Ondo</option><option>Osun</option><option>Oyo</option><option>Plateau</option><option>Rivers</option><option>Sokoto</option><option>Taraba</option><option>Yobe</option><option>Zamfara</option>
+          </select>
+        </div>
+        <div class="step-nav"><div></div><button type="button" class="btn btn-primary" onclick="goStep(2)">Next Step →</button></div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step-slide" id="step2">
+        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:22px;font-weight:500;">Track Selection & Verification</p>
+        <div class="form-group"><label class="form-label">Select Tech Track *</label>
+          <select class="form-control" id="track_id" required><option value="">Loading tracks...</option></select>
+        </div>
+        <div class="epay-box">
+          🔐 <strong>ePayBillz User ID Required</strong><br/>
+          Your ePayBillz User ID is used to verify your identity as a registered ePayBillz user. You can find it in your ePayBillz account profile or mobile app.
+        </div>
+        <div class="form-group"><label class="form-label">ePayBillz User ID *</label><input type="text" class="form-control" id="epayybillz_user_id" placeholder="Enter your ePayBillz User ID" required/></div>
+        <div class="step-nav">
+          <button type="button" class="btn btn-outline" onclick="goStep(1,true)">← Back</button>
+          <button type="button" class="btn btn-primary" onclick="goStep(3)">Next Step →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step-slide" id="step3">
+        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:22px;font-weight:500;">Create Password</p>
+
+        <!-- Payment banner — shown only when payment is enabled -->
+        <div class="pay-banner" id="payBanner">
+          <div class="pay-banner-icon">💳</div>
+          <div class="pay-banner-text">
+            <strong>Registration Fee Required</strong>
+            <span id="payProviderLabel">Pay securely via Flutterwave</span>
+          </div>
+          <div class="pay-amount" id="payAmountDisplay">₦0</div>
+        </div>
+
+        <div class="form-group"><label class="form-label">Password *</label><input type="password" class="form-control" id="password" placeholder="Minimum 8 characters" required/></div>
+        <div class="form-group"><label class="form-label">Confirm Password *</label><input type="password" class="form-control" id="confirm_password" placeholder="Re-enter your password" required/></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
+          <input type="checkbox" id="agree" style="margin-top:5px;accent-color:var(--accent);width:15px;height:15px;"/>
+          <label for="agree" style="font-size:0.82rem;color:var(--muted);">I agree to the <a href="#" style="color:var(--accent2);">Terms of Service</a> and <a href="#" style="color:var(--accent2);">Privacy Policy</a></label>
+        </div>
+        <div class="step-nav">
+          <button type="button" class="btn btn-outline" onclick="goStep(2,true)">← Back</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">Submit Application 🚀</button>
+        </div>
+      </div>
+
+    </form>
+
+    <p style="margin-top:28px;text-align:center;color:var(--muted);font-size:0.82rem;">
+      Already have an account? <a href="/login" style="color:var(--accent2);font-weight:600;">Login here</a>
+    </p>
+  </div>
+</div>
+
+<!-- Payment SDKs -->
+<script src="https://checkout.flutterwave.com/v3.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script src="/js/app.js"></script>
+<script>
+let currentStep = 1;
+let photoBase64 = null;
+let payConfig = null;        // loaded from /api/payments/config
+let verifiedPayRef = null;   // set after successful payment verification
+let verifiedPayProvider = null;
+
+// ── Load payment config on page load ─────────────────────────────────
+async function loadPaymentConfig() {
+  try {
+    const res = await fetch('/api/payments/config');
+    payConfig = await res.json();
+
+    if (payConfig.payment_enabled && payConfig.registration_fee > 0) {
+      // Update subtitle
+      document.getElementById('freeTag').textContent = 'Open to all Nigerians.';
+
+      // Format amount
+      const symbol = payConfig.payment_currency === 'USD' ? '$' : payConfig.payment_currency === 'GHS' ? '₵' : '₦';
+      const amount = Number(payConfig.registration_fee).toLocaleString();
+
+      // Show banner on step 3
+      document.getElementById('payBanner').classList.add('show');
+      document.getElementById('payAmountDisplay').textContent = `${symbol}${amount}`;
+      document.getElementById('payProviderLabel').textContent =
+        `Pay securely via ${payConfig.payment_provider === 'paystack' ? 'Paystack' : 'Flutterwave'}`;
+
+      // Update submit button
+      document.getElementById('submitBtn').textContent = `Pay ${symbol}${amount} & Submit 🚀`;
+    }
+  } catch(e) {
+    // Payment config failed — default to free registration
+    payConfig = { payment_enabled: false };
+  }
+}
+
+// ── Photo preview ─────────────────────────────────────────────────────
+function previewPhoto(input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    photoBase64 = e.target.result;
+    const img = document.getElementById('photoPreview');
+    img.src = photoBase64;
+    img.style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// ── Load tracks ───────────────────────────────────────────────────────
+async function loadTracks() {
+  try {
+    const res = await fetch('/api/fellows/tracks-public');
+    if (res.ok) {
+      const tracks = await res.json();
+      const sel = document.getElementById('track_id');
+      sel.innerHTML = '<option value="">Select your track</option>' +
+        tracks.map(t => `<option value="${t.id}">${t.icon || ''} ${t.name}</option>`).join('');
+    }
+  } catch(e) {
+    document.getElementById('track_id').innerHTML = '<option value="">Failed to load — refresh page</option>';
+  }
+}
+
+// ── Step bar ──────────────────────────────────────────────────────────
+function updateStepBar(step) {
+  const labels = ['', 'Step 1 of 3 — Personal Info', 'Step 2 of 3 — Track & Verification', 'Step 3 of 3 — Create Password'];
+  document.getElementById('stepLabel').textContent = labels[step];
+  for (let i = 1; i <= 3; i++) {
+    const seg = document.getElementById(`seg${i}`);
+    seg.className = 'step-seg ' + (i < step ? 'done' : i === step ? 'active' : 'todo');
+  }
+}
+
+function goStep(step, back = false) {
+  if (step > currentStep) {
+    if (currentStep === 1) {
+      if (!document.getElementById('full_name').value || !document.getElementById('email').value || !document.getElementById('state').value) {
+        showAlert('Please fill in all required fields.', 'error'); return;
+      }
+    }
+    if (currentStep === 2) {
+      if (!document.getElementById('track_id').value || !document.getElementById('epayybillz_user_id').value) {
+        showAlert('Please select a track and enter your ePayBillz User ID.', 'error'); return;
+      }
+    }
+  }
+  const cur = document.getElementById(`step${currentStep}`);
+  cur.classList.remove('active', 'back');
+  cur.style.display = 'none';
+  currentStep = step;
+  const next = document.getElementById(`step${currentStep}`);
+  next.style.display = 'block';
+  next.classList.remove('back');
+  if (back) next.classList.add('back');
+  void next.offsetWidth;
+  next.classList.add('active');
+  updateStepBar(step);
+  clearAlert();
+}
+
+function showAlert(msg, type) {
+  const b = document.getElementById('alertBox');
+  b.className = `alert alert-${type} show`;
+  b.textContent = msg;
+}
+function clearAlert() {
+  document.getElementById('alertBox').classList.remove('show');
+}
+
+// ── Final submit (after payment verified or payment off) ──────────────
+async function submitRegistration(payRef, payProvider) {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Submitting...';
+
+  const payload = {
+    full_name: document.getElementById('full_name').value,
+    email: document.getElementById('email').value,
+    phone: document.getElementById('phone').value,
+    gender: document.getElementById('gender').value,
+    date_of_birth: document.getElementById('date_of_birth').value,
+    state: document.getElementById('state').value,
+    track_id: document.getElementById('track_id').value,
+    epayybillz_user_id: document.getElementById('epayybillz_user_id').value,
+    password: document.getElementById('password').value,
+    profile_photo: photoBase64 || null,
+    payment_reference: payRef || null,
+    payment_provider: payProvider || null,
+  };
+
+  const result = await api.post('/api/auth/register', payload);
+  if (result.success) {
+    document.querySelector('.form-wrap').innerHTML = `
+      <div style="text-align:center;padding:60px 0;">
+        <div style="font-size:4rem;margin-bottom:20px;">🎉</div>
+        <h2 style="font-size:1.6rem;margin-bottom:12px;letter-spacing:-0.02em;">Application Submitted!</h2>
+        <p style="color:var(--muted);margin-bottom:28px;line-height:1.8;">
+          Your application is under review. You'll be notified once approved by our admin team.<br/>
+          This usually takes 24–48 hours.
+        </p>
+        <a href="/login" class="btn btn-primary btn-lg">Go to Login →</a>
+      </div>
+    `;
+  } else {
+    showAlert(result.error || 'Registration failed. Please try again.', 'error');
+    btn.disabled = false;
+    const symbol = payConfig?.payment_currency === 'USD' ? '$' : payConfig?.payment_currency === 'GHS' ? '₵' : '₦';
+    const fee = payConfig?.payment_enabled && payConfig?.registration_fee > 0
+      ? `Pay ${symbol}${Number(payConfig.registration_fee).toLocaleString()} & Submit 🚀`
+      : 'Submit Application 🚀';
+    btn.textContent = fee;
+  }
+}
+
+// ── Payment via Flutterwave ───────────────────────────────────────────
+function openFlutterwave(email, name, onSuccess) {
+  const symbol = payConfig.payment_currency === 'USD' ? '$' : payConfig.payment_currency === 'GHS' ? '₵' : '₦';
+  FlutterwaveCheckout({
+    public_key: payConfig.flutterwave_public_key,
+    tx_ref: `DRIX-${Date.now()}`,
+    amount: payConfig.registration_fee,
+    currency: payConfig.payment_currency,
+    payment_options: 'card,banktransfer,ussd',
+    customer: { email, name, phone_number: document.getElementById('phone').value || '' },
+    customizations: {
+      title: 'Drix Tech Talent',
+      description: 'Fellowship Registration Fee',
+      logo: '',
+    },
+    callback: async (response) => {
+      if (response.status === 'successful' || response.status === 'completed') {
+        await onSuccess(String(response.transaction_id), 'flutterwave');
+      } else {
+        showAlert('Payment was not completed. Please try again.', 'error');
+        resetSubmitBtn();
+      }
+    },
+    onclose: () => { resetSubmitBtn(); }
+  });
+}
+
+// ── Payment via Paystack ──────────────────────────────────────────────
+function openPaystack(email, name, onSuccess) {
+  const handler = PaystackPop.setup({
+    key: payConfig.paystack_public_key,
+    email,
+    amount: Math.round(payConfig.registration_fee * 100), // kobo
+    currency: payConfig.payment_currency,
+    ref: `DRIX-${Date.now()}`,
+    metadata: { name, phone: document.getElementById('phone').value || '' },
+    callback: async (response) => {
+      await onSuccess(response.reference, 'paystack');
+    },
+    onClose: () => { resetSubmitBtn(); }
+  });
+  handler.openIframe();
+}
+
+// ── Verify payment with backend ───────────────────────────────────────
+async function verifyPayment(reference, provider, email) {
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = 'Verifying payment...';
+  try {
+    const res = await fetch('/api/payments/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference, provider, email })
+    });
+    const data = await res.json();
+    if (data.verified) {
+      await submitRegistration(reference, provider);
+    } else {
+      showAlert('Payment verification failed. Please contact support.', 'error');
+      resetSubmitBtn();
+    }
+  } catch(e) {
+    showAlert('Network error during verification. Please contact support.', 'error');
+    resetSubmitBtn();
+  }
+}
+
+function resetSubmitBtn() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = false;
+  if (payConfig?.payment_enabled && payConfig?.registration_fee > 0) {
+    const symbol = payConfig.payment_currency === 'USD' ? '$' : payConfig.payment_currency === 'GHS' ? '₵' : '₦';
+    btn.textContent = `Pay ${symbol}${Number(payConfig.registration_fee).toLocaleString()} & Submit 🚀`;
+  } else {
+    btn.textContent = 'Submit Application 🚀';
+  }
+}
+
+// ── Form submit handler ───────────────────────────────────────────────
+document.getElementById('regForm').addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const password = document.getElementById('password').value;
+  const confirm = document.getElementById('confirm_password').value;
+  const email = document.getElementById('email').value;
+  const name = document.getElementById('full_name').value;
+
+  if (!document.getElementById('agree').checked) { showAlert('Please agree to the terms.', 'error'); return; }
+  if (password !== confirm) { showAlert('Passwords do not match.', 'error'); return; }
+  if (password.length < 8) { showAlert('Password must be at least 8 characters.', 'error'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Please wait...';
+
+  // If payment is enabled and fee > 0, open payment popup
+  if (payConfig?.payment_enabled && payConfig?.registration_fee > 0) {
+    if (!payConfig.flutterwave_public_key && !payConfig.paystack_public_key) {
+      showAlert('Payment is not configured yet. Please contact admin.', 'error');
+      resetSubmitBtn(); return;
+    }
+
+    const onSuccess = async (ref, provider) => {
+      await verifyPayment(ref, provider, email);
+    };
+
+    if (payConfig.payment_provider === 'paystack') {
+      openPaystack(email, name, onSuccess);
+    } else {
+      openFlutterwave(email, name, onSuccess);
+    }
+  } else {
+    // Free registration — submit directly
+    await submitRegistration(null, null);
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────
+loadTracks();
+loadPaymentConfig();
+updateStepBar(1);
+</script>
+</body>
+</html>

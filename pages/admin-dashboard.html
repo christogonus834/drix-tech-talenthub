@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Dashboard — Drix Tech Talent</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<style>
+.pending-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.pending-row:last-child{border-bottom:none;}
+.fellow-av{width:34px;height:34px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.82rem;flex-shrink:0;overflow:hidden;}
+.fellow-av img{width:100%;height:100%;object-fit:cover;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">DRIX Admin<span>Management Portal</span></div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Overview</div>
+    <a href="/admin/dashboard" class="sidebar-link active"><span class="icon">📊</span> Dashboard</a>
+    <a href="/admin/fellows" class="sidebar-link"><span class="icon">👥</span> Fellows</a>
+    <div class="sidebar-section-label">Content</div>
+    <a href="/admin/courses" class="sidebar-link"><span class="icon">📚</span> Courses</a>
+    <a href="/admin/cohorts" class="sidebar-link"><span class="icon">🎓</span> Cohorts</a>
+    <div class="sidebar-section-label">System</div>
+    <a href="/admin/settings" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div id="adminInfo" style="font-size:0.76rem;color:var(--muted);margin-bottom:9px;padding:0 4px;"></div>
+    <button onclick="adminLogout()" class="btn btn-outline w-full btn-sm">← Sign Out</button>
+  </div>
+</aside>
+
+<main class="main-content">
+  <div class="flex-between mb-6">
+    <div><h1 style="font-size:1.5rem;letter-spacing:-0.02em;">Dashboard</h1><p style="color:var(--muted);font-size:0.82rem;">Overview of the Drix Tech Talent Programme</p></div>
+    <span id="adminRoleTag" style="background:rgba(124,110,247,0.1);border:1px solid rgba(124,110,247,0.25);color:var(--accent2);padding:5px 14px;border-radius:50px;font-size:0.72rem;font-weight:600;text-transform:uppercase;"></span>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="sTot">—</div><div class="stat-label">Total Fellows</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="sApp">—</div><div class="stat-label">Approved</div></div>
+    <div class="stat-card" style="border-color:rgba(251,146,60,0.2);"><div class="stat-icon">⏳</div><div class="stat-value" id="sPen" style="color:var(--warning);">—</div><div class="stat-label">Pending Approval</div></div>
+    <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-value" id="sTrk">—</div><div class="stat-label">Active Tracks</div></div>
+    <div class="stat-card"><div class="stat-icon">🎓</div><div class="stat-value" id="sCoh">—</div><div class="stat-label">Active Cohorts</div></div>
+  </div>
+
+  <div class="grid-2 mt-6">
+    <div class="card">
+      <div class="flex-between mb-4"><h3 style="font-size:0.95rem;">⏳ Pending Approvals</h3><a href="/admin/fellows?status=pending" style="font-size:0.76rem;color:var(--accent2);">View all →</a></div>
+      <div id="pendingList"><div style="text-align:center;padding:20px;"><span class="loader"></span></div></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:0.95rem;margin-bottom:18px;">📢 Broadcast Notification</h3>
+      <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-control" id="bTitle" placeholder="Notification title"/></div>
+      <div class="form-group"><label class="form-label">Message</label><textarea class="form-control" id="bMsg" rows="3" placeholder="Message to all fellows..."></textarea></div>
+      <div class="form-group"><label class="form-label">Type</label>
+        <select class="form-control" id="bType"><option value="info">Info</option><option value="success">Success</option><option value="warning">Warning</option><option value="alert">Alert</option></select>
+      </div>
+      <button class="btn btn-primary w-full" onclick="broadcast()">Send to All Fellows</button>
+    </div>
+  </div>
+
+  <div class="card mt-6">
+    <div class="flex-between mb-4"><h3 style="font-size:0.95rem;">Recent Registrations</h3><a href="/admin/fellows" class="btn btn-outline btn-sm">Manage All</a></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fellow</th><th>Track</th><th>State</th><th>Status</th><th>Registered</th><th>Actions</th></tr></thead>
+        <tbody id="recentTable"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);"><span class="loader"></span></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- ACTION MODAL -->
+<div class="modal-overlay" id="actionModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="actionTitle">Manage Fellow</div><button class="modal-close" onclick="closeModal('actionModal')">✕</button></div>
+    <p style="color:var(--muted);font-size:0.86rem;margin-bottom:20px;" id="actionDesc"></p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-success btn-sm" onclick="doStatus('approved')">✅ Approve</button>
+      <button class="btn btn-danger btn-sm" onclick="doStatus('rejected')">❌ Reject</button>
+      <button class="btn btn-outline btn-sm" onclick="doStatus('suspended')">⛔ Suspend</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+let selId = null;
+async function loadDash() {
+  const stats = await api.get('/api/admin/stats');
+  if (!stats) { window.location.href = '/admin/login'; return; }
+  document.getElementById('sTot').textContent = stats.total_fellows;
+  document.getElementById('sApp').textContent = stats.approved_fellows;
+  document.getElementById('sPen').textContent = stats.pending_fellows;
+  document.getElementById('sTrk').textContent = stats.active_tracks;
+  document.getElementById('sCoh').textContent = stats.active_cohorts;
+
+  // Pending
+  const { data: pending } = await api.get('/api/admin/fellows?status=pending&limit=5') || {};
+  const pl = document.getElementById('pendingList');
+  if (pending?.length) {
+    pl.innerHTML = pending.map(f => `
+      <div class="pending-row">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="fellow-av">${f.profile_photo ? `<img src="${f.profile_photo}"/>` : (f.full_name?.charAt(0) || '?')}</div>
+          <div><div style="font-weight:600;font-size:0.86rem;">${f.full_name}</div><div style="font-size:0.74rem;color:var(--muted);">${f.tracks?.name || '—'} · ${f.state || '—'}</div></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAction('${f.id}','${f.full_name}')">Review</button>
+      </div>`).join('');
+  } else {
+    pl.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>No pending approvals</p></div>';
+  }
+
+  // Recent
+  const { data: recent } = await api.get('/api/admin/fellows?limit=8') || {};
+  const tb = document.getElementById('recentTable');
+  if (recent?.length) {
+    tb.innerHTML = recent.map(f => `
+      <tr>
+        <td><div style="display:flex;align-items:center;gap:9px;"><div class="fellow-av">${f.profile_photo ? `<img src="${f.profile_photo}"/>` : (f.full_name?.charAt(0) || '?')}</div><div><div style="font-weight:600;font-size:0.84rem;">${f.full_name}</div><div style="font-size:0.72rem;color:var(--muted);">${f.email}</div></div></div></td>
+        <td style="font-size:0.84rem;">${f.tracks?.name || '—'}</td>
+        <td style="font-size:0.84rem;">${f.state || '—'}</td>
+        <td><span class="badge badge-${f.status}">${f.status}</span></td>
+        <td style="font-size:0.78rem;color:var(--muted);">${formatDate(f.created_at)}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="openAction('${f.id}','${f.full_name}')">Manage</button></td>
+      </tr>`).join('');
+  } else {
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">No fellows yet</td></tr>';
+  }
+}
+
+function openAction(id, name) {
+  selId = id;
+  document.getElementById('actionTitle').textContent = `Manage: ${name}`;
+  document.getElementById('actionDesc').textContent = `Choose an action for ${name}:`;
+  openModal('actionModal');
+}
+
+async function doStatus(status) {
+  if (!selId) return;
+  const r = await api.patch(`/api/admin/fellows/${selId}/status`, { status });
+  if (r.success) { showToast(`Fellow ${status}!`, 'success'); closeModal('actionModal'); loadDash(); }
+  else showToast(r.error || 'Failed.', 'error');
+}
+
+async function broadcast() {
+  const title = document.getElementById('bTitle').value;
+  const message = document.getElementById('bMsg').value;
+  const type = document.getElementById('bType').value;
+  if (!title || !message) { showToast('Fill in title and message.', 'error'); return; }
+  const r = await api.post('/api/admin/notifications/broadcast', { title, message, type });
+  if (r.success) { showToast(`Sent to ${r.sent} fellows!`, 'success'); document.getElementById('bTitle').value = ''; document.getElementById('bMsg').value = ''; }
+  else showToast('Broadcast failed.', 'error');
+}
+
+loadDash();
+</script>
+</body>
+</html>
