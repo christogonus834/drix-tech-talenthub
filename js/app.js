@@ -1,5 +1,5 @@
 // ── API BASE — your Render backend URL ───────────────────────────────
-const API_BASE = 'https://drix-tech-talent.onrender.com';
+const API_BASE = 'https://drix-talenthub-backend.onrender.com';
 
 const api = {
   async get(url) {
