@@ -55,7 +55,7 @@
 <script src="/js/app.js"></script>
 <script>
 async function loadCohorts() {
-  const cohorts = await api.get('/api/admin/cohorts');
+  const cohorts = await api.get('/api/admin/cohorts', true);
   const grid = document.getElementById('cohortsGrid');
   if (!cohorts?.length) { grid.innerHTML = '<div class="empty-state" style="grid-column:span 2;"><div class="icon">🎓</div><p>No cohorts yet.</p></div>'; return; }
   grid.innerHTML = cohorts.map(c => `
@@ -109,7 +109,7 @@ async function saveCohort() {
 
 async function delCohort(id) {
   confirmAction('Delete this cohort?', async () => {
-    const r = await api.delete(`/api/admin/cohorts/${id}`);
+    const r = await api.delete(`/api/admin/cohorts/${id}`, true);
     if (r.success) { showToast('Deleted.', 'success'); loadCohorts(); }
     else showToast('Failed.', 'error');
   });

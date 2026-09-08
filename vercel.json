@@ -17,5 +17,15 @@
     { "source": "/admin/cohorts", "destination": "/pages/admin-cohorts.html" },
     { "source": "/admin/settings", "destination": "/pages/admin-settings.html" },
     { "source": "/admin/certificates", "destination": "/pages/admin-certificates.html" }
+  ],
+  "headers": [
+    {
+      "source": "/css/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000" }]
+    },
+    {
+      "source": "/js/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000" }]
+    }
   ]
 }

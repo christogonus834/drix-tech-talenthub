@@ -75,7 +75,7 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
     email: document.getElementById('email').value,
     password: document.getElementById('password').value
   });
-  if (result.success) { window.location.href = result.redirect || '/dashboard'; }
+  if (result.success) { localStorage.setItem("drix_token", result.token); window.location.href = result.redirect || "/dashboard"; }
   else {
     box.className = 'alert alert-error show'; box.textContent = result.error || 'Login failed.';
     btn.disabled = false; btn.textContent = 'Sign In';

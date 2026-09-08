@@ -218,7 +218,7 @@ function previewSlide(n) {
 }
 
 async function loadSettings() {
-  const s = await api.get('/api/admin/settings');
+  const s = await api.get('/api/admin/settings', true);
   if (!s) { window.location.href = '/admin/login'; return; }
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };

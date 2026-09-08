@@ -1,43 +1,69 @@
-// ── API BASE — your Render backend URL ───────────────────────────────
+// ── API BASE — Render backend URL ────────────────────────────────────
 const API_BASE = 'https://drix-talenthub-backend.onrender.com';
 
+// ── TOKEN STORAGE (localStorage — no cross-domain cookie issues) ──────
+const auth = {
+  getToken()        { return localStorage.getItem('drix_token'); },
+  getAdminToken()   { return localStorage.getItem('drix_admin_token'); },
+  setToken(t)       { localStorage.setItem('drix_token', t); },
+  setAdminToken(t)  { localStorage.setItem('drix_admin_token', t); },
+  clearToken()      { localStorage.removeItem('drix_token'); },
+  clearAdminToken() { localStorage.removeItem('drix_admin_token'); },
+};
+
+// ── API HELPER ────────────────────────────────────────────────────────
 const api = {
-  async get(url) {
-    const res = await fetch(API_BASE + url, { credentials: 'include' });
-    if (res.status === 401) { window.location.href = '/login'; return null; }
-    if (res.status === 403) { window.location.href = '/login'; return null; }
+  headers(isAdmin = false) {
+    const token = isAdmin ? auth.getAdminToken() : auth.getToken();
+    const h = { 'Content-Type': 'application/json' };
+    if (token) h['Authorization'] = `Bearer ${token}`;
+    return h;
+  },
+  async get(url, isAdmin = false) {
+    const res = await fetch(API_BASE + url, {
+      headers: this.headers(isAdmin)
+    });
+    if (res.status === 401) {
+      isAdmin ? (auth.clearAdminToken(), window.location.href = '/admin/login')
+              : (auth.clearToken(), window.location.href = '/login');
+      return null;
+    }
     return res.json();
   },
-  async post(url, data) {
+  async post(url, data, isAdmin = false) {
     const res = await fetch(API_BASE + url, {
-      method: 'POST', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: this.headers(isAdmin),
       body: JSON.stringify(data)
     });
     return res.json();
   },
-  async patch(url, data) {
+  async patch(url, data, isAdmin = false) {
     const res = await fetch(API_BASE + url, {
-      method: 'PATCH', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'PATCH',
+      headers: this.headers(isAdmin),
       body: JSON.stringify(data)
     });
     return res.json();
   },
-  async put(url, data) {
+  async put(url, data, isAdmin = false) {
     const res = await fetch(API_BASE + url, {
-      method: 'PUT', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'PUT',
+      headers: this.headers(isAdmin),
       body: JSON.stringify(data)
     });
     return res.json();
   },
-  async delete(url) {
-    const res = await fetch(API_BASE + url, { method: 'DELETE', credentials: 'include' });
+  async delete(url, isAdmin = false) {
+    const res = await fetch(API_BASE + url, {
+      method: 'DELETE',
+      headers: this.headers(isAdmin)
+    });
     return res.json();
   }
 };
 
+// ── TOAST ─────────────────────────────────────────────────────────────
 function showToast(message, type = 'success') {
   let container = document.querySelector('.toast-container');
   if (!container) {
@@ -58,6 +84,7 @@ function showToast(message, type = 'success') {
   }, 3500);
 }
 
+// ── MODAL ─────────────────────────────────────────────────────────────
 function openModal(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add('show');
@@ -72,15 +99,17 @@ document.addEventListener('click', e => {
   }
 });
 
+// ── LOGOUT ────────────────────────────────────────────────────────────
 async function logout() {
-  await fetch(API_BASE + '/api/auth/logout', { method: 'POST', credentials: 'include' });
+  auth.clearToken();
   window.location.href = '/login';
 }
 async function adminLogout() {
-  await fetch(API_BASE + '/api/auth/logout', { method: 'POST', credentials: 'include' });
+  auth.clearAdminToken();
   window.location.href = '/admin/login';
 }
 
+// ── FORMAT DATE ───────────────────────────────────────────────────────
 function formatDate(d) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('en-NG', {
@@ -88,10 +117,12 @@ function formatDate(d) {
   });
 }
 
+// ── CONFIRM ───────────────────────────────────────────────────────────
 function confirmAction(message, callback) {
   if (confirm(message)) callback();
 }
 
+// ── ACTIVE SIDEBAR LINK ───────────────────────────────────────────────
 document.querySelectorAll('.sidebar-link').forEach(link => {
   if (link.getAttribute('href') === window.location.pathname) {
     link.classList.add('active');

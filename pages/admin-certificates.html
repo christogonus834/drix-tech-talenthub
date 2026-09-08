@@ -100,7 +100,7 @@ function showTab(tab) {
 }
 
 async function loadRequests() {
-  const data = await api.get('/api/admin/certificates/requests/all');
+  const data = await api.get('/api/admin/certificates/requests/all', true);
   const pending = data?.filter(r => r.status === 'pending') || [];
   const badge = document.getElementById('reqBadge');
   if (pending.length) { badge.style.display = 'inline'; badge.textContent = pending.length; }
@@ -134,7 +134,7 @@ async function loadRequests() {
 }
 
 async function loadIssued() {
-  const data = await api.get('/api/admin/certificates/all');
+  const data = await api.get('/api/admin/certificates/all', true);
   document.getElementById('issuedTable').innerHTML = !data?.length
     ? '<div style="padding:40px;text-align:center;color:var(--muted);">No certificates issued yet</div>'
     : `<table class="cert-table">
@@ -191,7 +191,7 @@ async function confirmReject() {
 
 async function revokeCert(id) {
   confirmAction('Revoke this certificate? This cannot be undone.', async () => {
-    const r = await api.delete(`/api/admin/certificates/${id}`);
+    const r = await api.delete(`/api/admin/certificates/${id}`, true);
     if (r?.success) { showToast('Certificate revoked.', 'info'); loadIssued(); }
     else showToast('Failed.', 'error');
   });

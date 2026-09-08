@@ -88,7 +88,7 @@
 <script>
 let selId = null;
 async function loadDash() {
-  const stats = await api.get('/api/admin/stats');
+  const stats = await api.get('/api/admin/stats', true);
   if (!stats) { window.location.href = '/admin/login'; return; }
   document.getElementById('sTot').textContent = stats.total_fellows;
   document.getElementById('sApp').textContent = stats.approved_fellows;
@@ -97,7 +97,7 @@ async function loadDash() {
   document.getElementById('sCoh').textContent = stats.active_cohorts;
 
   // Pending
-  const { data: pending } = await api.get('/api/admin/fellows?status=pending&limit=5') || {};
+  const { data: pending } = await api.get('/api/admin/fellows?status=pending&limit=5', true) || {};
   const pl = document.getElementById('pendingList');
   if (pending?.length) {
     pl.innerHTML = pending.map(f => `
@@ -113,7 +113,7 @@ async function loadDash() {
   }
 
   // Recent
-  const { data: recent } = await api.get('/api/admin/fellows?limit=8') || {};
+  const { data: recent } = await api.get('/api/admin/fellows?limit=8', true) || {};
   const tb = document.getElementById('recentTable');
   if (recent?.length) {
     tb.innerHTML = recent.map(f => `
@@ -139,7 +139,7 @@ function openAction(id, name) {
 
 async function doStatus(status) {
   if (!selId) return;
-  const r = await api.patch(`/api/admin/fellows/${selId}/status`, { status });
+  const r = await api.patch(`/api/admin/fellows/${selId}/status`, { status }, true);
   if (r.success) { showToast(`Fellow ${status}!`, 'success'); closeModal('actionModal'); loadDash(); }
   else showToast(r.error || 'Failed.', 'error');
 }
@@ -149,7 +149,7 @@ async function broadcast() {
   const message = document.getElementById('bMsg').value;
   const type = document.getElementById('bType').value;
   if (!title || !message) { showToast('Fill in title and message.', 'error'); return; }
-  const r = await api.post('/api/admin/notifications/broadcast', { title, message, type });
+  const r = await api.post('/api/admin/notifications/broadcast', { title, message, type }, true);
   if (r.success) { showToast(`Sent to ${r.sent} fellows!`, 'success'); document.getElementById('bTitle').value = ''; document.getElementById('bMsg').value = ''; }
   else showToast('Broadcast failed.', 'error');
 }

@@ -45,7 +45,7 @@ document.getElementById('adminLoginForm').addEventListener('submit', async e => 
     email: document.getElementById('email').value,
     password: document.getElementById('password').value
   });
-  if (result.success) { window.location.href = result.redirect || '/admin/dashboard'; }
+  if (result.success) { localStorage.setItem('drix_admin_token', result.token); window.location.href = result.redirect || '/admin/dashboard'; }
   else {
     box.className = 'alert alert-error show'; box.textContent = result.error || 'Invalid credentials.';
     btn.disabled = false; btn.textContent = 'Access Admin Panel';

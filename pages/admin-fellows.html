@@ -92,7 +92,7 @@
 let curPage = 1, selIds = [], selFellowId = null, selFellowData = null;
 
 async function loadTracks() {
-  const tracks = await api.get('/api/admin/tracks');
+  const tracks = await api.get('/api/admin/tracks', true);
   const sel = document.getElementById('trackFilter');
   tracks?.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; sel.appendChild(o); });
 }
@@ -106,7 +106,7 @@ async function loadFellows(page = 1) {
   if (search) p.set('search', search);
   if (status) p.set('status', status);
   if (track) p.set('track_id', track);
-  const res = await api.get(`/api/admin/fellows?${p}`);
+  const res = await api.get(`/api/admin/fellows?${p}`, true);
   if (!res) return;
   const { data, count } = res;
   document.getElementById('totalCount').textContent = `${count || 0} fellows`;
@@ -139,7 +139,7 @@ function toggleAll() { const c = document.getElementById('selAll').checked; docu
 function updateSel() { selIds = Array.from(document.querySelectorAll('.fchk:checked')).map(x => x.value); }
 
 async function quickStatus(id, status) {
-  const r = await api.patch(`/api/admin/fellows/${id}/status`, { status });
+  const r = await api.patch(`/api/admin/fellows/${id}/status`, { status }, true);
   if (r.success) { showToast(`Fellow ${status}!`, 'success'); loadFellows(curPage); }
   else showToast('Failed.', 'error');
 }
@@ -147,7 +147,7 @@ async function quickStatus(id, status) {
 async function bulkApprove() {
   if (!selIds.length) { showToast('Select fellows first.', 'error'); return; }
   confirmAction(`Approve ${selIds.length} fellows?`, async () => {
-    const r = await api.post('/api/admin/fellows/bulk-approve', { ids: selIds });
+    const r = await api.post('/api/admin/fellows/bulk-approve', { ids: selIds }, true);
     if (r.success) { showToast('Fellows approved!', 'success'); loadFellows(curPage); }
     else showToast('Failed.', 'error');
   });
@@ -155,7 +155,7 @@ async function bulkApprove() {
 
 async function viewFellow(id) {
   selFellowId = id;
-  const f = await api.get(`/api/admin/fellows/${id}`);
+  const f = await api.get(`/api/admin/fellows/${id}`, true);
   selFellowData = f;
   document.getElementById('fellowModalBody').innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border);">
@@ -187,7 +187,7 @@ async function viewFellow(id) {
 
 async function deleteFellow(id) {
   confirmAction('Permanently delete this fellow?', async () => {
-    const r = await api.delete(`/api/admin/fellows/${id}`);
+    const r = await api.delete(`/api/admin/fellows/${id}`, true);
     if (r.success) { showToast('Deleted.', 'success'); closeModal('fellowModal'); loadFellows(curPage); }
     else showToast('Failed.', 'error');
   });
