@@ -2,147 +2,423 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Courses — Drix Admin</title>
+<title>Tracks & Modules — Drix Admin</title>
 <link rel="stylesheet" href="/css/style.css"/>
+<style>
+.track-pill{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);cursor:pointer;transition:var(--trans);border:1px solid transparent;margin-bottom:4px;}
+.track-pill:hover{background:var(--surface2);}
+.track-pill.active{background:rgba(124,110,247,0.1);border-color:rgba(124,110,247,0.2);color:var(--brand-primary);}
+.track-dot{width:8px;height:8px;border-radius:50%;background:var(--grad2);flex-shrink:0;}
+.upload-progress{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:8px;display:none;}
+.upload-progress-bar{height:100%;background:var(--grad2);transition:width 0.3s;}
+.file-type-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:0.68rem;font-weight:600;}
+</style>
 </head>
 <body>
+<div class="layout">
 <aside class="sidebar">
   <div class="sidebar-logo">DRIX Admin<span>Management Portal</span></div>
   <nav class="sidebar-nav">
     <div class="sidebar-section-label">Overview</div>
-    <a href="/admin/dashboard" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
-    <a href="/admin/fellows" class="sidebar-link"><span class="icon">👥</span> Fellows</a>
+    <a href="/admin/dashboard" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>Dashboard</a>
+    <a href="/admin/fellows" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>Fellows</a>
     <div class="sidebar-section-label">Content</div>
-    <a href="/admin/courses" class="sidebar-link active"><span class="icon">📚</span> Courses</a>
-    <a href="/admin/cohorts" class="sidebar-link"><span class="icon">🎓</span> Cohorts</a>
+    <a href="/admin/courses" class="sidebar-link active"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Tracks & Modules</a>
+    <a href="/admin/cohorts" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Cohorts</a>
+    <a href="/admin/certificates" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></span>Certificates</a>
+    <a href="/admin/messages" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>Messages</a>
     <div class="sidebar-section-label">System</div>
-    <a href="/admin/settings" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
+    <a href="/admin/settings" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>Settings</a>
   </nav>
-  <div class="sidebar-bottom"><button onclick="adminLogout()" class="btn btn-outline w-full btn-sm">← Sign Out</button></div>
+  <div class="sidebar-bottom"><button onclick="adminLogout()" class="btn btn-outline w-full btn-sm">Sign Out</button></div>
 </aside>
 
 <main class="main-content">
   <div class="flex-between mb-6">
-    <div><h1 style="font-size:1.5rem;letter-spacing:-0.02em;">Courses</h1><p style="color:var(--muted);font-size:0.82rem;">Manage course content per track</p></div>
-    <button class="btn btn-primary" onclick="openModal('courseModal')">+ Add Course</button>
+    <div><h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.03em;">Tracks & Modules</h1><p style="color:var(--muted);font-size:0.82rem;margin-top:3px;">Manage course content, modules, lessons and files</p></div>
   </div>
 
-  <div class="card mb-4" style="padding:14px 20px;">
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <select class="form-control" id="trackFilter" onchange="loadCourses()" style="max-width:220px;background:var(--bg3);"><option value="">All Tracks</option></select>
-      <span id="courseCount" style="color:var(--muted);font-size:0.78rem;"></span>
+  <div style="display:grid;grid-template-columns:240px 1fr;gap:20px;">
+    <!-- TRACK LIST -->
+    <div class="card" style="height:fit-content;padding:16px;">
+      <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted2);margin-bottom:12px;">Tracks</div>
+      <div id="trackList"><div class="flex-center" style="padding:20px;"><span class="loader"></span></div></div>
     </div>
-  </div>
 
-  <div class="card">
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Title</th><th>Track</th><th>Type</th><th>Duration</th><th>Order</th><th>Active</th><th>Actions</th></tr></thead>
-        <tbody id="coursesTable"><tr><td colspan="7" style="text-align:center;padding:40px;"><span class="loader"></span></td></tr></tbody>
-      </table>
+    <!-- MODULE CONTENT -->
+    <div id="moduleArea">
+      <div class="card flex-center" style="padding:60px;flex-direction:column;gap:12px;color:var(--muted);">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <p style="font-size:0.85rem;">Select a track to manage its modules</p>
+      </div>
     </div>
   </div>
 </main>
+</div>
 
-<!-- COURSE MODAL -->
-<div class="modal-overlay" id="courseModal">
-  <div class="modal">
-    <div class="modal-header"><div class="modal-title" id="courseModalTitle">Add Course</div><button class="modal-close" onclick="closeModal('courseModal');resetCourse()">✕</button></div>
-    <input type="hidden" id="editCourseId"/>
-    <div class="form-group"><label class="form-label">Course Title *</label><input type="text" class="form-control" id="cTitle" placeholder="e.g. Introduction to Python"/></div>
-    <div class="form-group"><label class="form-label">Track *</label><select class="form-control" id="cTrack"><option value="">Select track</option></select></div>
-    <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="cDesc" rows="3" placeholder="Course description..."></textarea></div>
-    <div class="grid-2">
-      <div class="form-group"><label class="form-label">Resource Type</label>
-        <select class="form-control" id="cType"><option value="video">Video</option><option value="article">Article</option><option value="pdf">PDF</option><option value="quiz">Quiz</option><option value="project">Project</option></select>
-      </div>
-      <div class="form-group"><label class="form-label">Duration (minutes)</label><input type="number" class="form-control" id="cDuration" placeholder="60"/></div>
-    </div>
-    <div class="form-group"><label class="form-label">Content URL</label><input type="url" class="form-control" id="cUrl" placeholder="https://..."/></div>
-    <div class="form-group"><label class="form-label">Order Index</label><input type="number" class="form-control" id="cOrder" placeholder="1"/></div>
+<!-- ADD MODULE MODAL -->
+<div class="modal-overlay" id="addModuleModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header"><div class="modal-title">Add Module</div><button class="modal-close" onclick="closeModal('addModuleModal')">✕</button></div>
+    <input type="hidden" id="moduleTrackId"/>
+    <div class="form-group"><label class="form-label">Module Title *</label><input type="text" class="form-control" id="moduleTitle" placeholder="e.g. Introduction to Cybersecurity"/></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="moduleDesc" placeholder="What students will learn in this module..." rows="3"></textarea></div>
+    <div class="form-group"><label class="form-label">Order</label><input type="number" class="form-control" id="moduleOrder" value="1" min="1"/></div>
     <div style="display:flex;gap:10px;margin-top:8px;">
-      <button class="btn btn-primary" onclick="saveCourse()">Save Course</button>
-      <button class="btn btn-outline" onclick="closeModal('courseModal');resetCourse()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveModule()">Add Module</button>
+      <button class="btn btn-outline" onclick="closeModal('addModuleModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD LESSON MODAL -->
+<div class="modal-overlay" id="addLessonModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header"><div class="modal-title">Add Lesson</div><button class="modal-close" onclick="closeModal('addLessonModal')">✕</button></div>
+    <input type="hidden" id="lessonModuleId"/>
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">Title *</label><input type="text" class="form-control" id="lessonTitle" placeholder="Lesson title"/></div>
+      <div class="form-group"><label class="form-label">Type *</label>
+        <select class="form-control" id="lessonType" onchange="onLessonTypeChange()">
+          <option value="video">Video</option>
+          <option value="pdf">PDF</option>
+          <option value="document">Word / Document</option>
+          <option value="audio">Audio</option>
+          <option value="article">Article / Text</option>
+          <option value="quiz">Quiz</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="lessonDesc" rows="2" placeholder="Brief description..."></textarea></div>
+
+    <!-- FILE UPLOAD SECTION -->
+    <div id="fileUploadSection">
+      <div class="form-group">
+        <label class="form-label">Upload File from Computer</label>
+        <div class="file-drop" id="lessonFileDrop" onclick="document.getElementById('lessonFileInput').click()">
+          <input type="file" id="lessonFileInput" accept="video/*,.pdf,.doc,.docx,.ppt,.pptx,.mp3,.wav"/>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" style="margin-bottom:10px;"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+          <div style="font-weight:600;font-size:0.84rem;margin-bottom:4px;">Drop file here or click to browse</div>
+          <div style="font-size:0.74rem;color:var(--muted2);">Video, PDF, Word, Audio — up to 200MB</div>
+          <div id="selectedFileName" style="margin-top:8px;font-size:0.76rem;color:var(--brand-accent);display:none;"></div>
+        </div>
+        <div class="upload-progress" id="uploadProgress"><div class="upload-progress-bar" id="uploadProgressBar" style="width:0%"></div></div>
+        <input type="hidden" id="lessonFileUrl"/>
+      </div>
+    </div>
+
+    <!-- TEXT CONTENT SECTION -->
+    <div id="textContentSection" style="display:none;">
+      <div class="form-group"><label class="form-label">Article Content</label><textarea class="form-control" id="lessonContent" rows="6" placeholder="Write article content here..."></textarea></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">Duration (minutes)</label><input type="number" class="form-control" id="lessonDuration" value="30" min="1"/></div>
+      <div class="form-group"><label class="form-label">Points Reward</label><input type="number" class="form-control" id="lessonPoints" value="10" min="0"/></div>
+    </div>
+    <div class="form-group"><label class="form-label">Order Index</label><input type="number" class="form-control" id="lessonOrder" value="1" min="1"/></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <label class="toggle"><input type="checkbox" id="lessonFreePreview"/><span class="toggle-slider"></span></label>
+      <span style="font-size:0.82rem;color:var(--muted);">Free preview (accessible without login)</span>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" id="saveLessonBtn" onclick="saveLesson()">Add Lesson</button>
+      <button class="btn btn-outline" onclick="closeModal('addLessonModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ASSIGNMENT MODAL -->
+<div class="modal-overlay" id="addAssignmentModal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header"><div class="modal-title">Add Assignment</div><button class="modal-close" onclick="closeModal('addAssignmentModal')">✕</button></div>
+    <input type="hidden" id="assignModuleId"/>
+    <div class="form-group"><label class="form-label">Title *</label><input type="text" class="form-control" id="assignTitle" placeholder="Assignment title"/></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="assignDesc" rows="2"></textarea></div>
+    <div class="form-group"><label class="form-label">Instructions</label><textarea class="form-control" id="assignInstructions" rows="4" placeholder="Detailed instructions for students..."></textarea></div>
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">Due (days from enrolment)</label><input type="number" class="form-control" id="assignDueDays" value="7" min="1"/></div>
+      <div class="form-group"><label class="form-label">Max Score</label><input type="number" class="form-control" id="assignMaxScore" value="100" min="1"/></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button class="btn btn-primary" onclick="saveAssignment()">Add Assignment</button>
+      <button class="btn btn-outline" onclick="closeModal('addAssignmentModal')">Cancel</button>
     </div>
   </div>
 </div>
 
 <script src="/js/app.js"></script>
 <script>
-// ── ADMIN TOKEN GUARD ─────────────────────────────────────────────
-if (!localStorage.getItem('drix_admin_token')) {
-  window.location.href = '/admin/login';
-}
+if (!auth.getAdminToken()) window.location.href = '/admin/login';
 
-</script>
-<script>
+let selectedTrackId = null;
+let selectedTrackName = '';
+let uploadedFileUrl = '';
+
+// ── LOAD TRACKS ──────────────────────────────────────────────────────
 async function loadTracks() {
-  const tracks = await api.get('/api/admin/tracks', true);
-  ['trackFilter','cTrack'].forEach(id => {
-    const sel = document.getElementById(id);
-    if (id === 'cTrack') sel.innerHTML = '<option value="">Select track</option>';
-    tracks?.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = `${t.icon||''} ${t.name}`; sel.appendChild(o); });
+  const data = await api.get('/api/admin/tracks', true);
+  const list = document.getElementById('trackList');
+  if (!data?.length) { list.innerHTML = '<p style="font-size:0.8rem;color:var(--muted);padding:10px;">No tracks found</p>'; return; }
+  list.innerHTML = data.map(t => `
+    <div class="track-pill" id="pill-${t.id}" onclick="selectTrack('${t.id}','${t.name.replace(/'/g,"\\'")}')">
+      <div class="track-dot"></div>
+      <span style="font-size:0.82rem;font-weight:500;">${t.name}</span>
+    </div>`).join('');
+}
+
+// ── SELECT TRACK ─────────────────────────────────────────────────────
+async function selectTrack(trackId, trackName) {
+  selectedTrackId = trackId;
+  selectedTrackName = trackName;
+  document.querySelectorAll('.track-pill').forEach(p => p.classList.remove('active'));
+  document.getElementById(`pill-${trackId}`)?.classList.add('active');
+  await loadModules(trackId, trackName);
+}
+
+// ── LOAD MODULES ─────────────────────────────────────────────────────
+async function loadModules(trackId, trackName) {
+  const area = document.getElementById('moduleArea');
+  area.innerHTML = '<div class="flex-center" style="padding:40px;"><span class="loader"></span></div>';
+  const modules = await api.get(`/api/modules/admin/track/${trackId}`, true);
+
+  area.innerHTML = `
+    <div class="flex-between mb-4">
+      <h2 style="font-size:1.1rem;font-weight:700;">${trackName}</h2>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="openAddModule()">Add Module</button>
+        <button class="btn btn-outline btn-sm" onclick="openExamEditor('${trackId}')">Manage Exam</button>
+      </div>
+    </div>
+    <div id="modulesList">${renderModules(modules || [])}</div>`;
+}
+
+function renderModules(modules) {
+  if (!modules.length) return `<div class="card flex-center" style="padding:40px;flex-direction:column;gap:8px;color:var(--muted);"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><p style="font-size:0.84rem;">No modules yet. Click "Add Module" to start.</p></div>`;
+  return modules.map((m, i) => `
+    <div class="module-block animate-fade" style="animation-delay:${i*0.05}s">
+      <div class="module-header" onclick="toggleModule('mod-${m.id}')">
+        <div class="module-num">${i+1}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:0.9rem;">${m.title}</div>
+          ${m.description ? `<div style="font-size:0.74rem;color:var(--muted);margin-top:2px;">${m.description}</div>` : ''}
+          <div style="font-size:0.7rem;color:var(--muted2);margin-top:3px;">${(m.lessons||[]).length} lessons · ${(m.assignments||[]).length} assignments</div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openAddLesson('${m.id}')">Add Lesson</button>
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openAddAssignment('${m.id}')">Add Assignment</button>
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteModule('${m.id}')">
+            <span class="icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></span>
+          </button>
+        </div>
+        <span class="icon-sm" style="color:var(--muted);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </div>
+      <div id="mod-${m.id}" class="module-lessons" style="display:none;">
+        ${renderLessons(m.lessons || [])}
+        ${renderAssignments(m.assignments || [])}
+      </div>
+    </div>`).join('');
+}
+
+function renderLessons(lessons) {
+  if (!lessons.length) return `<div style="padding:14px 22px;font-size:0.78rem;color:var(--muted2);">No lessons yet</div>`;
+  return lessons.map(l => {
+    const typeColors = { video:'lesson-type-video', pdf:'lesson-type-pdf', document:'lesson-type-document', audio:'lesson-type-quiz', article:'lesson-type-document', quiz:'lesson-type-quiz' };
+    const typeIcons = { video:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`, pdf:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`, document:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`, audio:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>`, quiz:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>` };
+    return `
+      <div class="lesson-row">
+        <div class="lesson-type-icon ${typeColors[l.type] || 'lesson-type-document'}">${typeIcons[l.type] || typeIcons.document}</div>
+        <div style="flex:1;">
+          <div class="lesson-title" style="font-size:0.83rem;font-weight:600;">${l.title}</div>
+          <div style="font-size:0.72rem;color:var(--muted);">${l.type} · ${l.duration_minutes} min · ${l.points_reward} pts</div>
+        </div>
+        ${l.content_url ? `<span style="font-size:0.68rem;background:rgba(6,214,160,0.1);color:var(--brand-accent);border:1px solid rgba(6,214,160,0.2);padding:2px 8px;border-radius:4px;font-weight:600;">File uploaded</span>` : '<span style="font-size:0.68rem;color:var(--muted2);">No file</span>'}
+        <button class="btn btn-danger btn-sm" onclick="deleteLesson('${l.id}')">
+          <span class="icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></span>
+        </button>
+      </div>`;
+  }).join('');
+}
+
+function renderAssignments(assignments) {
+  if (!assignments.length) return '';
+  return assignments.map(a => `
+    <div class="lesson-row" style="background:rgba(251,191,36,0.03);">
+      <div class="lesson-type-icon" style="background:rgba(251,191,36,0.1);color:var(--brand-warning);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:0.83rem;font-weight:600;">${a.title} <span style="font-size:0.68rem;background:rgba(251,191,36,0.1);color:var(--brand-warning);border:1px solid rgba(251,191,36,0.2);padding:2px 7px;border-radius:4px;margin-left:6px;">Assignment</span></div>
+        <div style="font-size:0.72rem;color:var(--muted);">Due: ${a.due_days} days · Max score: ${a.max_score} · ${(a.assignment_submissions||[]).length} submissions</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleModule(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ── FILE UPLOAD ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('lessonFileInput');
+  const drop = document.getElementById('lessonFileDrop');
+  if (!input || !drop) return;
+
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+  drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleFileSelect(e.dataTransfer.files[0]); });
+  input.addEventListener('change', () => { if (input.files[0]) handleFileSelect(input.files[0]); });
+});
+
+async function handleFileSelect(file) {
+  const nameEl = document.getElementById('selectedFileName');
+  const progress = document.getElementById('uploadProgress');
+  const bar = document.getElementById('uploadProgressBar');
+  const btn = document.getElementById('saveLessonBtn');
+
+  nameEl.style.display = 'block';
+  nameEl.textContent = `Selected: ${file.name} (${formatSize(file.size)})`;
+  progress.style.display = 'block';
+  bar.style.width = '0%';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Uploading...';
+
+  // Simulate progress
+  let prog = 0;
+  const interval = setInterval(() => { prog = Math.min(prog + 5, 85); bar.style.width = prog + '%'; }, 200);
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('track_id', selectedTrackId || 'general');
+
+  const result = await api.upload('/api/upload/lesson-file', formData, true);
+  clearInterval(interval);
+
+  if (result?.success) {
+    bar.style.width = '100%';
+    uploadedFileUrl = result.url;
+    nameEl.textContent = `Uploaded: ${file.name}`;
+    nameEl.style.color = 'var(--brand-accent)';
+  } else {
+    progress.style.display = 'none';
+    nameEl.textContent = 'Upload failed. Please try again.';
+    nameEl.style.color = 'var(--brand-danger)';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Add Lesson';
+}
+
+function onLessonTypeChange() {
+  const type = document.getElementById('lessonType').value;
+  document.getElementById('fileUploadSection').style.display = type === 'article' ? 'none' : 'block';
+  document.getElementById('textContentSection').style.display = type === 'article' ? 'block' : 'none';
+  const input = document.getElementById('lessonFileInput');
+  if (type === 'video') input.accept = 'video/*';
+  else if (type === 'pdf') input.accept = '.pdf';
+  else if (type === 'document') input.accept = '.doc,.docx,.ppt,.pptx';
+  else if (type === 'audio') input.accept = 'audio/*';
+}
+
+// ── MODALS ───────────────────────────────────────────────────────────
+function openAddModule() {
+  document.getElementById('moduleTrackId').value = selectedTrackId;
+  document.getElementById('moduleTitle').value = '';
+  document.getElementById('moduleDesc').value = '';
+  openModal('addModuleModal');
+}
+
+function openAddLesson(moduleId) {
+  document.getElementById('lessonModuleId').value = moduleId;
+  document.getElementById('lessonTitle').value = '';
+  document.getElementById('lessonDesc').value = '';
+  document.getElementById('lessonContent').value = '';
+  document.getElementById('selectedFileName').style.display = 'none';
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('lessonFileUrl').value = '';
+  uploadedFileUrl = '';
+  openModal('addLessonModal');
+}
+
+function openAddAssignment(moduleId) {
+  document.getElementById('assignModuleId').value = moduleId;
+  document.getElementById('assignTitle').value = '';
+  document.getElementById('assignDesc').value = '';
+  document.getElementById('assignInstructions').value = '';
+  openModal('addAssignmentModal');
+}
+
+// ── SAVE FUNCTIONS ────────────────────────────────────────────────────
+async function saveModule() {
+  const title = document.getElementById('moduleTitle').value.trim();
+  if (!title) return showToast('Title is required', 'error');
+  const r = await api.post('/api/modules/admin/module', {
+    track_id: document.getElementById('moduleTrackId').value,
+    title,
+    description: document.getElementById('moduleDesc').value,
+    order_index: parseInt(document.getElementById('moduleOrder').value) || 0
+  }, true);
+  if (r?.success) { showToast('Module added!', 'success'); closeModal('addModuleModal'); selectTrack(selectedTrackId, selectedTrackName); }
+  else showToast(r?.error || 'Failed', 'error');
+}
+
+async function saveLesson() {
+  const title = document.getElementById('lessonTitle').value.trim();
+  if (!title) return showToast('Title is required', 'error');
+  const type = document.getElementById('lessonType').value;
+  if (type !== 'article' && !uploadedFileUrl) return showToast('Please upload a file first', 'error');
+
+  const r = await api.post('/api/modules/admin/lesson', {
+    module_id: document.getElementById('lessonModuleId').value,
+    title, type,
+    description: document.getElementById('lessonDesc').value,
+    content_url: uploadedFileUrl || null,
+    content_text: document.getElementById('lessonContent').value || null,
+    duration_minutes: parseInt(document.getElementById('lessonDuration').value) || 0,
+    points_reward: parseInt(document.getElementById('lessonPoints').value) || 10,
+    order_index: parseInt(document.getElementById('lessonOrder').value) || 0,
+    is_free_preview: document.getElementById('lessonFreePreview').checked
+  }, true);
+  if (r?.success) { showToast('Lesson added!', 'success'); closeModal('addLessonModal'); selectTrack(selectedTrackId, selectedTrackName); }
+  else showToast(r?.error || 'Failed', 'error');
+}
+
+async function saveAssignment() {
+  const title = document.getElementById('assignTitle').value.trim();
+  if (!title) return showToast('Title is required', 'error');
+  const r = await api.post('/api/modules/admin/assignment', {
+    module_id: document.getElementById('assignModuleId').value,
+    title,
+    description: document.getElementById('assignDesc').value,
+    instructions: document.getElementById('assignInstructions').value,
+    due_days: parseInt(document.getElementById('assignDueDays').value) || 7,
+    max_score: parseInt(document.getElementById('assignMaxScore').value) || 100
+  }, true);
+  if (r?.success) { showToast('Assignment added!', 'success'); closeModal('addAssignmentModal'); selectTrack(selectedTrackId, selectedTrackName); }
+  else showToast(r?.error || 'Failed', 'error');
+}
+
+async function deleteModule(id) {
+  confirmAction('Delete this module and all its lessons?', async () => {
+    const r = await api.delete(`/api/modules/admin/module/${id}`, true);
+    if (r?.success) { showToast('Module deleted', 'info'); selectTrack(selectedTrackId, selectedTrackName); }
+    else showToast('Failed', 'error');
   });
 }
 
-async function loadCourses() {
-  const track = document.getElementById('trackFilter').value;
-  const courses = await api.get(`/api/admin/courses${track ? '?track_id=' + track : ''}`, true);
-  document.getElementById('courseCount').textContent = `${courses?.length || 0} courses`;
-  const tb = document.getElementById('coursesTable');
-  if (!courses?.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px;">No courses yet</td></tr>'; return; }
-  tb.innerHTML = courses.map(c => `
-    <tr>
-      <td><div style="font-weight:600;font-size:0.84rem;">${c.title}</div>${c.content_url ? `<div style="margin-top:2px;"><a href="${c.content_url}" target="_blank" style="font-size:0.72rem;color:var(--accent2);">View resource →</a></div>` : ''}</td>
-      <td style="font-size:0.82rem;">${c.tracks?.name || '—'}</td>
-      <td><span class="badge badge-approved" style="font-size:0.66rem;">${c.resource_type}</span></td>
-      <td style="font-size:0.82rem;">${c.duration_minutes} min</td>
-      <td style="font-size:0.82rem;">${c.order_index}</td>
-      <td><span style="color:${c.is_active ? 'var(--success)' : 'var(--danger);'};">${c.is_active ? '✓' : '✗'}</span></td>
-      <td><div style="display:flex;gap:5px;">
-        <button class="btn btn-outline btn-sm" onclick='editCourse(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Edit</button>
-        <button class="btn btn-danger btn-sm" onclick="delCourse('${c.id}')">Del</button>
-      </div></td>
-    </tr>`).join('');
-}
-
-function editCourse(c) {
-  document.getElementById('courseModalTitle').textContent = 'Edit Course';
-  document.getElementById('editCourseId').value = c.id;
-  document.getElementById('cTitle').value = c.title;
-  document.getElementById('cTrack').value = c.track_id;
-  document.getElementById('cDesc').value = c.description || '';
-  document.getElementById('cType').value = c.resource_type;
-  document.getElementById('cDuration').value = c.duration_minutes;
-  document.getElementById('cUrl').value = c.content_url || '';
-  document.getElementById('cOrder').value = c.order_index;
-  openModal('courseModal');
-}
-
-function resetCourse() {
-  document.getElementById('courseModalTitle').textContent = 'Add Course';
-  document.getElementById('editCourseId').value = '';
-  ['cTitle','cDesc','cUrl','cDuration','cOrder'].forEach(id => document.getElementById(id).value = '');
-}
-
-async function saveCourse() {
-  const id = document.getElementById('editCourseId').value;
-  const payload = { title: document.getElementById('cTitle').value, track_id: document.getElementById('cTrack').value, description: document.getElementById('cDesc').value, resource_type: document.getElementById('cType').value, duration_minutes: parseInt(document.getElementById('cDuration').value) || 60, content_url: document.getElementById('cUrl').value, order_index: parseInt(document.getElementById('cOrder').value) || 0 };
-  if (!payload.title || !payload.track_id) { showToast('Title and track are required.', 'error'); return; }
-  const r = id ? await api.put(`/api/admin/courses/${id}`, payload) : await api.post('/api/admin/courses', payload);
-  if (r.success) { showToast(`Course ${id ? 'updated' : 'created'}!`, 'success'); closeModal('courseModal'); resetCourse(); loadCourses(); }
-  else showToast(r.error || 'Failed.', 'error');
-}
-
-async function delCourse(id) {
-  confirmAction('Delete this course?', async () => {
-    const r = await api.delete(`/api/admin/courses/${id}`, true);
-    if (r.success) { showToast('Deleted.', 'success'); loadCourses(); }
-    else showToast('Failed.', 'error');
+async function deleteLesson(id) {
+  confirmAction('Delete this lesson?', async () => {
+    const r = await api.delete(`/api/modules/admin/lesson/${id}`, true);
+    if (r?.success) { showToast('Lesson deleted', 'info'); selectTrack(selectedTrackId, selectedTrackName); }
+    else showToast('Failed', 'error');
   });
 }
 
-loadTracks().then(() => loadCourses());
+function openExamEditor(trackId) {
+  showToast('Exam editor coming — use the API directly for now', 'info');
+}
+
+loadTracks();
 </script>
 </body>
 </html>

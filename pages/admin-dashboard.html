@@ -2,172 +2,182 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Admin Dashboard — Drix Tech Talent</title>
+<title>Dashboard — Drix Admin</title>
 <link rel="stylesheet" href="/css/style.css"/>
-<style>
-.pending-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
-.pending-row:last-child{border-bottom:none;}
-.fellow-av{width:34px;height:34px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.82rem;flex-shrink:0;overflow:hidden;}
-.fellow-av img{width:100%;height:100%;object-fit:cover;}
-</style>
 </head>
 <body>
+<div class="layout">
+
 <aside class="sidebar">
   <div class="sidebar-logo">DRIX Admin<span>Management Portal</span></div>
   <nav class="sidebar-nav">
     <div class="sidebar-section-label">Overview</div>
-    <a href="/admin/dashboard" class="sidebar-link active"><span class="icon">📊</span> Dashboard</a>
-    <a href="/admin/fellows" class="sidebar-link"><span class="icon">👥</span> Fellows</a>
+    <a href="/admin/dashboard" class="sidebar-link active">
+      <span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      Dashboard
+    </a>
+    <a href="/admin/fellows" class="sidebar-link">
+      <span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+      Fellows
+      <span id="pendingBadge" style="display:none;margin-left:auto;background:var(--brand-danger);color:white;border-radius:50px;padding:1px 7px;font-size:0.62rem;"></span>
+    </a>
     <div class="sidebar-section-label">Content</div>
-    <a href="/admin/courses" class="sidebar-link"><span class="icon">📚</span> Courses</a>
-    <a href="/admin/cohorts" class="sidebar-link"><span class="icon">🎓</span> Cohorts</a>
+    <a href="/admin/courses" class="sidebar-link">
+      <span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+      Tracks & Modules
+    </a>
+    <a href="/admin/cohorts" class="sidebar-link">
+      <span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+      Cohorts
+    </a>
+    <a href="/admin/certificates" class="sidebar-link">
+      <span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></span>
+      Certificates
+    </a>
+    <a href="/admin/messages" class="sidebar-link">
+      <span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+      Messages
+      <span id="msgBadge" style="display:none;margin-left:auto;background:var(--brand-primary);color:white;border-radius:50px;padding:1px 7px;font-size:0.62rem;"></span>
+    </a>
     <div class="sidebar-section-label">System</div>
-    <a href="/admin/settings" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
+    <a href="/admin/settings" class="sidebar-link">
+      <span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
+      Settings
+    </a>
   </nav>
   <div class="sidebar-bottom">
-    <div id="adminInfo" style="font-size:0.76rem;color:var(--muted);margin-bottom:9px;padding:0 4px;"></div>
-    <button onclick="adminLogout()" class="btn btn-outline w-full btn-sm">← Sign Out</button>
+    <button onclick="adminLogout()" class="btn btn-outline w-full btn-sm" style="gap:8px;">
+      <span class="icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+      Sign Out
+    </button>
   </div>
 </aside>
 
 <main class="main-content">
   <div class="flex-between mb-6">
-    <div><h1 style="font-size:1.5rem;letter-spacing:-0.02em;">Dashboard</h1><p style="color:var(--muted);font-size:0.82rem;">Overview of the Drix Tech Talent Programme</p></div>
-    <span id="adminRoleTag" style="background:rgba(124,110,247,0.1);border:1px solid rgba(124,110,247,0.25);color:var(--accent2);padding:5px 14px;border-radius:50px;font-size:0.72rem;font-weight:600;text-transform:uppercase;"></span>
+    <div>
+      <h1 style="font-size:1.6rem;font-weight:800;letter-spacing:-0.03em;">Dashboard</h1>
+      <p style="color:var(--muted);font-size:0.82rem;margin-top:3px;">Platform overview and management</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-outline btn-sm" onclick="window.location.reload()">Refresh</button>
+      <a href="/admin/fellows" class="btn btn-primary btn-sm">
+        <span class="icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+        Manage Fellows
+      </a>
+    </div>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="sTot">—</div><div class="stat-label">Total Fellows</div></div>
-    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="sApp">—</div><div class="stat-label">Approved</div></div>
-    <div class="stat-card" style="border-color:rgba(251,146,60,0.2);"><div class="stat-icon">⏳</div><div class="stat-value" id="sPen" style="color:var(--warning);">—</div><div class="stat-label">Pending Approval</div></div>
-    <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-value" id="sTrk">—</div><div class="stat-label">Active Tracks</div></div>
-    <div class="stat-card"><div class="stat-icon">🎓</div><div class="stat-value" id="sCoh">—</div><div class="stat-label">Active Cohorts</div></div>
+  <!-- STATS -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="stat-value" id="statTotal">—</div><div class="stat-label">Total Fellows</div></div>
+    <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-accent)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div class="stat-value" id="statApproved">—</div><div class="stat-label">Approved</div></div>
+    <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-warning)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="stat-value" id="statPending">—</div><div class="stat-label">Pending Approval</div></div>
+    <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-secondary)" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="stat-value" id="statTracks">—</div><div class="stat-label">Active Tracks</div></div>
   </div>
 
   <div class="grid-2 mt-6">
+    <!-- PENDING FELLOWS -->
     <div class="card">
-      <div class="flex-between mb-4"><h3 style="font-size:0.95rem;">⏳ Pending Approvals</h3><a href="/admin/fellows?status=pending" style="font-size:0.76rem;color:var(--accent2);">View all →</a></div>
-      <div id="pendingList"><div style="text-align:center;padding:20px;"><span class="loader"></span></div></div>
-    </div>
-    <div class="card">
-      <h3 style="font-size:0.95rem;margin-bottom:18px;">📢 Broadcast Notification</h3>
-      <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-control" id="bTitle" placeholder="Notification title"/></div>
-      <div class="form-group"><label class="form-label">Message</label><textarea class="form-control" id="bMsg" rows="3" placeholder="Message to all fellows..."></textarea></div>
-      <div class="form-group"><label class="form-label">Type</label>
-        <select class="form-control" id="bType"><option value="info">Info</option><option value="success">Success</option><option value="warning">Warning</option><option value="alert">Alert</option></select>
+      <div class="flex-between mb-4">
+        <h3 style="font-size:0.9rem;font-weight:700;">Pending Approvals</h3>
+        <a href="/admin/fellows" style="font-size:0.76rem;color:var(--brand-secondary);">View all →</a>
       </div>
-      <button class="btn btn-primary w-full" onclick="broadcast()">Send to All Fellows</button>
+      <div id="pendingList"><div class="flex-center" style="padding:30px;"><span class="loader"></span></div></div>
+    </div>
+
+    <!-- RECENT FELLOWS -->
+    <div class="card">
+      <div class="flex-between mb-4">
+        <h3 style="font-size:0.9rem;font-weight:700;">Recent Registrations</h3>
+        <a href="/admin/fellows" style="font-size:0.76rem;color:var(--brand-secondary);">View all →</a>
+      </div>
+      <div id="recentList"><div class="flex-center" style="padding:30px;"><span class="loader"></span></div></div>
     </div>
   </div>
 
+  <!-- QUICK ACTIONS -->
   <div class="card mt-6">
-    <div class="flex-between mb-4"><h3 style="font-size:0.95rem;">Recent Registrations</h3><a href="/admin/fellows" class="btn btn-outline btn-sm">Manage All</a></div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Fellow</th><th>Track</th><th>State</th><th>Status</th><th>Registered</th><th>Actions</th></tr></thead>
-        <tbody id="recentTable"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);"><span class="loader"></span></td></tr></tbody>
-      </table>
+    <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:18px;">Quick Actions</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a href="/admin/fellows?filter=pending" class="btn btn-outline">Review Applications</a>
+      <a href="/admin/courses" class="btn btn-outline">Manage Tracks</a>
+      <a href="/admin/certificates" class="btn btn-outline">Certificate Requests</a>
+      <a href="/admin/messages" class="btn btn-outline">View Messages</a>
+      <a href="/admin/settings" class="btn btn-outline">Settings</a>
     </div>
   </div>
 </main>
-
-<!-- ACTION MODAL -->
-<div class="modal-overlay" id="actionModal">
-  <div class="modal">
-    <div class="modal-header"><div class="modal-title" id="actionTitle">Manage Fellow</div><button class="modal-close" onclick="closeModal('actionModal')">✕</button></div>
-    <p style="color:var(--muted);font-size:0.86rem;margin-bottom:20px;" id="actionDesc"></p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="btn btn-success btn-sm" onclick="doStatus('approved')">✅ Approve</button>
-      <button class="btn btn-danger btn-sm" onclick="doStatus('rejected')">❌ Reject</button>
-      <button class="btn btn-outline btn-sm" onclick="doStatus('suspended')">⛔ Suspend</button>
-    </div>
-  </div>
 </div>
 
 <script src="/js/app.js"></script>
 <script>
-// ── ADMIN TOKEN GUARD ─────────────────────────────────────────────
-if (!localStorage.getItem('drix_admin_token')) {
-  window.location.href = '/admin/login';
-}
+// Guard
+if (!auth.getAdminToken()) window.location.href = '/admin/login';
 
-</script>
-<script>
-let selId = null;
-async function loadDash() {
+async function loadDashboard() {
   const stats = await api.get('/api/admin/stats', true);
-  if (!stats) {
-    // Only redirect if no admin token exists
-    if (!localStorage.getItem('drix_admin_token')) {
-      window.location.href = '/admin/login';
-    }
-    return;
-  }
-  document.getElementById('sTot').textContent = stats.total_fellows;
-  document.getElementById('sApp').textContent = stats.approved_fellows;
-  document.getElementById('sPen').textContent = stats.pending_fellows;
-  document.getElementById('sTrk').textContent = stats.active_tracks;
-  document.getElementById('sCoh').textContent = stats.active_cohorts;
+  if (!stats) return;
 
-  // Pending
-  const { data: pending } = await api.get('/api/admin/fellows?status=pending&limit=5', true) || {};
-  const pl = document.getElementById('pendingList');
-  if (pending?.length) {
-    pl.innerHTML = pending.map(f => `
-      <div class="pending-row">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div class="fellow-av">${f.profile_photo ? `<img src="${f.profile_photo}"/>` : (f.full_name?.charAt(0) || '?')}</div>
-          <div><div style="font-weight:600;font-size:0.86rem;">${f.full_name}</div><div style="font-size:0.74rem;color:var(--muted);">${f.tracks?.name || '—'} · ${f.state || '—'}</div></div>
+  document.getElementById('statTotal').textContent = stats.total_fellows || 0;
+  document.getElementById('statApproved').textContent = stats.approved_fellows || 0;
+  document.getElementById('statPending').textContent = stats.pending_fellows || 0;
+  document.getElementById('statTracks').textContent = stats.active_tracks || 0;
+
+  if (stats.pending_fellows > 0) {
+    const b = document.getElementById('pendingBadge');
+    b.style.display = 'inline'; b.textContent = stats.pending_fellows;
+  }
+
+  // Load pending fellows
+  const pending = await api.get('/api/admin/fellows?status=pending&limit=5', true);
+  const pendingList = document.getElementById('pendingList');
+  if (!pending?.data?.length) {
+    pendingList.innerHTML = '<div class="empty-state" style="padding:20px;"><p>No pending applications</p></div>';
+  } else {
+    pendingList.innerHTML = pending.data.map(f => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div class="avatar">${f.profile_photo ? `<img src="${f.profile_photo}"/>` : f.full_name.charAt(0)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:0.84rem;">${f.full_name}</div>
+          <div style="font-size:0.72rem;color:var(--muted);">${f.tracks?.name || '—'} · ${formatDate(f.created_at)}</div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="openAction('${f.id}','${f.full_name}')">Review</button>
+        <button class="btn btn-success btn-sm" onclick="approveFellow('${f.id}')">Approve</button>
       </div>`).join('');
-  } else {
-    pl.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>No pending approvals</p></div>';
   }
 
-  // Recent
-  const { data: recent } = await api.get('/api/admin/fellows?limit=8', true) || {};
-  const tb = document.getElementById('recentTable');
-  if (recent?.length) {
-    tb.innerHTML = recent.map(f => `
-      <tr>
-        <td><div style="display:flex;align-items:center;gap:9px;"><div class="fellow-av">${f.profile_photo ? `<img src="${f.profile_photo}"/>` : (f.full_name?.charAt(0) || '?')}</div><div><div style="font-weight:600;font-size:0.84rem;">${f.full_name}</div><div style="font-size:0.72rem;color:var(--muted);">${f.email}</div></div></div></td>
-        <td style="font-size:0.84rem;">${f.tracks?.name || '—'}</td>
-        <td style="font-size:0.84rem;">${f.state || '—'}</td>
-        <td><span class="badge badge-${f.status}">${f.status}</span></td>
-        <td style="font-size:0.78rem;color:var(--muted);">${formatDate(f.created_at)}</td>
-        <td><button class="btn btn-outline btn-sm" onclick="openAction('${f.id}','${f.full_name}')">Manage</button></td>
-      </tr>`).join('');
+  // Load recent fellows
+  const recent = await api.get('/api/admin/fellows?limit=5', true);
+  const recentList = document.getElementById('recentList');
+  if (!recent?.data?.length) {
+    recentList.innerHTML = '<div class="empty-state" style="padding:20px;"><p>No registrations yet</p></div>';
   } else {
-    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">No fellows yet</td></tr>';
+    recentList.innerHTML = recent.data.map(f => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div class="avatar">${f.profile_photo ? `<img src="${f.profile_photo}"/>` : f.full_name.charAt(0)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:0.84rem;">${f.full_name}</div>
+          <div style="font-size:0.72rem;color:var(--muted);">${f.tracks?.name || '—'}</div>
+        </div>
+        <span class="badge badge-${f.status}">${f.status}</span>
+      </div>`).join('');
+  }
+
+  // Check unread messages
+  const msgs = await api.get('/api/messages/admin/all?status=unread', true);
+  if (msgs?.length > 0) {
+    const b = document.getElementById('msgBadge');
+    b.style.display = 'inline'; b.textContent = msgs.length;
   }
 }
 
-function openAction(id, name) {
-  selId = id;
-  document.getElementById('actionTitle').textContent = `Manage: ${name}`;
-  document.getElementById('actionDesc').textContent = `Choose an action for ${name}:`;
-  openModal('actionModal');
+async function approveFellow(id) {
+  const r = await api.patch(`/api/admin/fellows/${id}/status`, { status: 'approved' }, true);
+  if (r?.success) { showToast('Fellow approved!', 'success'); loadDashboard(); }
+  else showToast(r?.error || 'Failed.', 'error');
 }
 
-async function doStatus(status) {
-  if (!selId) return;
-  const r = await api.patch(`/api/admin/fellows/${selId}/status`, { status }, true);
-  if (r.success) { showToast(`Fellow ${status}!`, 'success'); closeModal('actionModal'); loadDash(); }
-  else showToast(r.error || 'Failed.', 'error');
-}
-
-async function broadcast() {
-  const title = document.getElementById('bTitle').value;
-  const message = document.getElementById('bMsg').value;
-  const type = document.getElementById('bType').value;
-  if (!title || !message) { showToast('Fill in title and message.', 'error'); return; }
-  const r = await api.post('/api/admin/notifications/broadcast', { title, message, type }, true);
-  if (r.success) { showToast(`Sent to ${r.sent} fellows!`, 'success'); document.getElementById('bTitle').value = ''; document.getElementById('bMsg').value = ''; }
-  else showToast('Broadcast failed.', 'error');
-}
-
-loadDash();
+loadDashboard();
 </script>
 </body>
 </html>

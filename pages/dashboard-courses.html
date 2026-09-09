@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Courses — Drix Tech Talent</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<style>
+.lesson-viewer{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rxl);overflow:hidden;margin-top:20px;display:none;}
+.lesson-viewer.show{display:block;}
+.video-wrap{position:relative;width:100%;padding-top:56.25%;background:#000;}
+.video-wrap video{position:absolute;inset:0;width:100%;height:100%;}
+.pdf-wrap{width:100%;height:600px;border:none;}
+.doc-wrap{padding:24px;font-size:0.9rem;line-height:1.8;color:var(--text2);}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="sidebar-logo">DRIX Tech Talent<span>Fellow Portal</span></div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Main</div>
+    <a href="/dashboard" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>Dashboard</a>
+    <a href="/dashboard/courses" class="sidebar-link active"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>My Courses</a>
+    <a href="/dashboard/community" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>Community</a>
+    <a href="/dashboard/leaderboard" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span>Leaderboard</a>
+    <div class="sidebar-section-label">Account</div>
+    <a href="/dashboard/certificates" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></span>Certificates</a>
+    <a href="/dashboard/messages" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>Messages</a>
+  </nav>
+  <div class="sidebar-bottom"><button onclick="logout()" class="btn btn-outline w-full btn-sm">Sign Out</button></div>
+</aside>
+
+<main class="main-content">
+  <div class="flex-between mb-6">
+    <div><h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.03em;">My Courses</h1><p style="color:var(--muted);font-size:0.82rem;margin-top:3px;" id="trackLabel">Loading track...</p></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span id="overallProgress" style="font-size:0.82rem;color:var(--muted);">0% complete</span>
+    </div>
+  </div>
+
+  <!-- MODULES LIST -->
+  <div id="modulesList"><div class="flex-center" style="padding:60px;"><span class="loader"></span></div></div>
+
+  <!-- LESSON VIEWER -->
+  <div class="lesson-viewer" id="lessonViewer">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;" id="viewerModule">—</div>
+        <div style="font-weight:700;font-size:1rem;" id="viewerTitle">—</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="closeViewer()">Close</button>
+    </div>
+
+    <div id="viewerContent"></div>
+
+    <!-- AI ASSISTANT -->
+    <div style="padding:20px 24px;border-top:1px solid var(--border);">
+      <div class="ai-box">
+        <div class="ai-header">
+          <div class="ai-indicator"></div>
+          <span style="font-size:0.8rem;font-weight:600;">AI Learning Assistant</span>
+          <span style="font-size:0.72rem;color:var(--muted);margin-left:auto;">Ask anything about this lesson</span>
+        </div>
+        <div class="ai-messages" id="aiMessages">
+          <div class="ai-msg assistant">
+            <div class="ai-bubble">Hello! I am your AI learning assistant. Ask me anything about this lesson or the topic you are studying.</div>
+          </div>
+        </div>
+        <div class="ai-input-row">
+          <input class="ai-input" id="aiInput" placeholder="Ask a question about this lesson..." onkeydown="if(event.key==='Enter')askAI()"/>
+          <button class="ai-send" onclick="askAI()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLETE BUTTON -->
+    <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;">
+      <button class="btn btn-success" id="completeBtn" onclick="markComplete()">
+        <span class="icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+        Mark as Complete
+      </button>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+if (!auth.getToken()) window.location.href = '/login';
+
+let currentLessonId = null;
+let currentLessonContext = '';
+let fellowTrackId = null;
+
+async function loadCourses() {
+  const meData = await api.get('/api/fellows/me');
+  if (!meData) return;
+  fellowTrackId = meData.fellow?.track_id;
+  document.getElementById('trackLabel').textContent = meData.fellow?.tracks?.name || 'Your Track';
+
+  if (!fellowTrackId) {
+    document.getElementById('modulesList').innerHTML = '<div class="card empty-state"><p>No track assigned yet. Contact admin.</p></div>';
+    return;
+  }
+
+  const modules = await api.get(`/api/modules/track/${fellowTrackId}`);
+  if (!modules?.length) {
+    document.getElementById('modulesList').innerHTML = '<div class="card empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><h3>No content yet</h3><p>Your admin has not added lessons yet. Check back soon.</p></div>';
+    return;
+  }
+
+  // Count totals
+  let totalLessons = 0, doneLessons = 0;
+  modules.forEach(m => {
+    totalLessons += (m.lessons||[]).length;
+    doneLessons += (m.lessons||[]).filter(l => l.fellow_lesson_progress?.some(p => p.completed)).length;
+  });
+  const pct = totalLessons > 0 ? Math.round((doneLessons/totalLessons)*100) : 0;
+  document.getElementById('overallProgress').textContent = `${pct}% complete`;
+
+  document.getElementById('modulesList').innerHTML = modules.map((m, i) => `
+    <div class="module-block animate-fade" style="animation-delay:${i*0.06}s;">
+      <div class="module-header" onclick="toggleModule('mod-${m.id}')">
+        <div class="module-num">${i+1}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:0.9rem;">${m.title}</div>
+          ${m.description ? `<div style="font-size:0.74rem;color:var(--muted);margin-top:2px;">${m.description}</div>` : ''}
+          <div style="margin-top:6px;">
+            <div class="progress-bar" style="width:160px;display:inline-block;">
+              <div class="progress-fill" style="width:${calcModuleProgress(m)}%"></div>
+            </div>
+            <span style="font-size:0.68rem;color:var(--muted);margin-left:8px;">${calcModuleProgress(m)}%</span>
+          </div>
+        </div>
+        <span class="icon-sm" style="color:var(--muted);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </div>
+      <div id="mod-${m.id}" class="module-lessons" style="display:none;">
+        ${(m.lessons||[]).map(l => {
+          const done = l.fellow_lesson_progress?.some(p => p.completed);
+          const typeIcon = {
+            video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>',
+            pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+            document: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+            audio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>',
+            quiz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+          };
+          const typeColor = { video:'lesson-type-video', pdf:'lesson-type-pdf', document:'lesson-type-document', audio:'lesson-type-quiz', quiz:'lesson-type-quiz', article:'lesson-type-document' };
+          return `
+            <div class="lesson-row ${done?'completed':''}" onclick="openLesson('${l.id}','${l.title.replace(/'/g,"\\'")}','${m.title.replace(/'/g,"\\'")}','${l.type}','${l.content_url||''}','${l.content_text||''}')">
+              <div class="lesson-type-icon ${typeColor[l.type]||'lesson-type-document'}">${typeIcon[l.type]||typeIcon.document}</div>
+              <div style="flex:1;">
+                <div class="lesson-title" style="font-size:0.84rem;font-weight:600;">${l.title}</div>
+                <div style="font-size:0.72rem;color:var(--muted);">${l.type} · ${l.duration_minutes} min · ${l.points_reward} pts</div>
+              </div>
+              ${done
+                ? `<span class="icon-sm" style="color:var(--brand-accent);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>`
+                : `<span class="badge badge-info" style="font-size:0.66rem;">Start</span>`}
+            </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function calcModuleProgress(m) {
+  const total = (m.lessons||[]).length;
+  if (!total) return 0;
+  const done = (m.lessons||[]).filter(l => l.fellow_lesson_progress?.some(p => p.completed)).length;
+  return Math.round((done/total)*100);
+}
+
+function toggleModule(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function openLesson(id, title, moduleTitle, type, contentUrl, contentText) {
+  currentLessonId = id;
+  currentLessonContext = `Lesson: ${title}, Module: ${moduleTitle}, Type: ${type}`;
+
+  document.getElementById('viewerTitle').textContent = title;
+  document.getElementById('viewerModule').textContent = moduleTitle;
+
+  // Render content based on type
+  let html = '';
+  if (type === 'video' && contentUrl) {
+    html = `<div class="video-wrap"><video controls src="${contentUrl}"></video></div>`;
+  } else if (type === 'pdf' && contentUrl) {
+    html = `<iframe class="pdf-wrap" src="${contentUrl}" title="${title}"></iframe>`;
+  } else if ((type === 'document') && contentUrl) {
+    html = `<div class="doc-wrap">
+      <p style="margin-bottom:16px;color:var(--muted);">This document is available for download.</p>
+      <a href="${contentUrl}" target="_blank" download class="btn btn-primary">
+        <span class="icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+        Download Document
+      </a>
+    </div>`;
+  } else if (type === 'audio' && contentUrl) {
+    html = `<div class="doc-wrap"><audio controls style="width:100%;margin-top:8px;" src="${contentUrl}"></audio></div>`;
+  } else if (type === 'article' && contentText) {
+    html = `<div class="doc-wrap">${contentText.replace(/\n/g,'<br>')}</div>`;
+  } else {
+    html = `<div class="doc-wrap empty-state"><p>Content not available yet</p></div>`;
+  }
+
+  document.getElementById('viewerContent').innerHTML = html;
+  document.getElementById('lessonViewer').classList.add('show');
+  document.getElementById('aiMessages').innerHTML = '<div class="ai-msg assistant"><div class="ai-bubble">Hello! I am your AI learning assistant. Ask me anything about <strong>' + title + '</strong>.</div></div>';
+
+  // Scroll to viewer
+  document.getElementById('lessonViewer').scrollIntoView({ behavior: 'smooth' });
+
+  // Mark as started in backend
+  api.get(`/api/modules/lesson/${id}`);
+}
+
+function closeViewer() {
+  document.getElementById('lessonViewer').classList.remove('show');
+  currentLessonId = null;
+}
+
+async function markComplete() {
+  if (!currentLessonId) return;
+  const btn = document.getElementById('completeBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="loader"></span>';
+  const r = await api.post(`/api/modules/lesson/${currentLessonId}/complete`, {});
+  if (r?.success) {
+    showToast('Lesson completed! Points awarded.', 'success');
+    closeViewer();
+    loadCourses();
+  } else {
+    showToast(r?.error || 'Failed', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<span class="icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span> Mark as Complete';
+  }
+}
+
+function askAI() {
+  sendAIMessage('aiInput', 'aiMessages', currentLessonContext);
+}
+
+loadCourses();
+</script>
+</body>
+</html>

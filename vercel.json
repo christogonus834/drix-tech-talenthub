@@ -5,10 +5,11 @@
     { "source": "/login", "destination": "/pages/login.html" },
     { "source": "/verify", "destination": "/pages/verify.html" },
     { "source": "/dashboard", "destination": "/pages/dashboard.html" },
-    { "source": "/dashboard/courses", "destination": "/pages/courses.html" },
+    { "source": "/dashboard/courses", "destination": "/pages/dashboard-courses.html" },
     { "source": "/dashboard/community", "destination": "/pages/community.html" },
     { "source": "/dashboard/leaderboard", "destination": "/pages/leaderboard.html" },
     { "source": "/dashboard/certificates", "destination": "/pages/certificates.html" },
+    { "source": "/dashboard/messages", "destination": "/pages/dashboard-messages.html" },
     { "source": "/admin", "destination": "/pages/admin-login.html" },
     { "source": "/admin/login", "destination": "/pages/admin-login.html" },
     { "source": "/admin/dashboard", "destination": "/pages/admin-dashboard.html" },
@@ -16,16 +17,7 @@
     { "source": "/admin/courses", "destination": "/pages/admin-courses.html" },
     { "source": "/admin/cohorts", "destination": "/pages/admin-cohorts.html" },
     { "source": "/admin/settings", "destination": "/pages/admin-settings.html" },
-    { "source": "/admin/certificates", "destination": "/pages/admin-certificates.html" }
-  ],
-  "headers": [
-    {
-      "source": "/css/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000" }]
-    },
-    {
-      "source": "/js/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000" }]
-    }
+    { "source": "/admin/certificates", "destination": "/pages/admin-certificates.html" },
+    { "source": "/admin/messages", "destination": "/pages/admin-messages.html" }
   ]
 }
