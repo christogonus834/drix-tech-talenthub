@@ -43,6 +43,13 @@
 </main>
 <script src="/js/app.js"></script>
 <script>
+// ── FELLOW TOKEN GUARD ────────────────────────────────────────────
+if (!localStorage.getItem('drix_token')) {
+  window.location.href = '/login';
+}
+
+</script>
+<script>
 async function load(){
   const [board,me]=await Promise.all([api.get('/api/fellows/leaderboard'),api.get('/api/fellows/me')]);
   if(!board?.length){document.getElementById('rankList').innerHTML='<div class="empty-state"><div class="icon">🏆</div><p>No rankings yet</p></div>';return;}

@@ -107,6 +107,13 @@
 
 <script src="/js/app.js"></script>
 <script>
+// ── FELLOW TOKEN GUARD ────────────────────────────────────────────
+if (!localStorage.getItem('drix_token')) {
+  window.location.href = '/login';
+}
+
+</script>
+<script>
 let certMeta = {};
 
 async function loadCertificates() {

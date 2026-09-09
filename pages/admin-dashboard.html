@@ -86,10 +86,23 @@
 
 <script src="/js/app.js"></script>
 <script>
+// ── ADMIN TOKEN GUARD ─────────────────────────────────────────────
+if (!localStorage.getItem('drix_admin_token')) {
+  window.location.href = '/admin/login';
+}
+
+</script>
+<script>
 let selId = null;
 async function loadDash() {
   const stats = await api.get('/api/admin/stats', true);
-  if (!stats) { window.location.href = '/admin/login'; return; }
+  if (!stats) {
+    // Only redirect if no admin token exists
+    if (!localStorage.getItem('drix_admin_token')) {
+      window.location.href = '/admin/login';
+    }
+    return;
+  }
   document.getElementById('sTot').textContent = stats.total_fellows;
   document.getElementById('sApp').textContent = stats.approved_fellows;
   document.getElementById('sPen').textContent = stats.pending_fellows;

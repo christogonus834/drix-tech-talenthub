@@ -69,6 +69,13 @@
 
 <script src="/js/app.js"></script>
 <script>
+// ── ADMIN TOKEN GUARD ─────────────────────────────────────────────
+if (!localStorage.getItem('drix_admin_token')) {
+  window.location.href = '/admin/login';
+}
+
+</script>
+<script>
 async function loadTracks() {
   const tracks = await api.get('/api/admin/tracks', true);
   ['trackFilter','cTrack'].forEach(id => {

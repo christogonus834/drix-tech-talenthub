@@ -92,6 +92,13 @@
 
 <script src="/js/app.js"></script>
 <script>
+// ── ADMIN TOKEN GUARD ─────────────────────────────────────────────
+if (!localStorage.getItem('drix_admin_token')) {
+  window.location.href = '/admin/login';
+}
+
+</script>
+<script>
 function showTab(tab) {
   document.getElementById('tab-requests').style.display = tab === 'requests' ? 'block' : 'none';
   document.getElementById('tab-issued').style.display = tab === 'issued' ? 'block' : 'none';

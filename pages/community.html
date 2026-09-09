@@ -45,6 +45,13 @@
 </main>
 <script src="/js/app.js"></script>
 <script>
+// ── FELLOW TOKEN GUARD ────────────────────────────────────────────
+if (!localStorage.getItem('drix_token')) {
+  window.location.href = '/login';
+}
+
+</script>
+<script>
 async function loadPosts(){
   const posts=await api.get('/api/fellows/community');
   const c=document.getElementById('postsList');

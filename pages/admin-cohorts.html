@@ -54,6 +54,13 @@
 
 <script src="/js/app.js"></script>
 <script>
+// ── ADMIN TOKEN GUARD ─────────────────────────────────────────────
+if (!localStorage.getItem('drix_admin_token')) {
+  window.location.href = '/admin/login';
+}
+
+</script>
+<script>
 async function loadCohorts() {
   const cohorts = await api.get('/api/admin/cohorts', true);
   const grid = document.getElementById('cohortsGrid');

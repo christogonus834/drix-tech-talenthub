@@ -43,6 +43,13 @@
 </main>
 <script src="/js/app.js"></script>
 <script>
+// ── FELLOW TOKEN GUARD ────────────────────────────────────────────
+if (!localStorage.getItem('drix_token')) {
+  window.location.href = '/login';
+}
+
+</script>
+<script>
 const typeIcons={video:'🎥',article:'📄',pdf:'📋',quiz:'📝',project:'🛠️'};
 async function load(){
   const [courses,me]=await Promise.all([api.get('/api/fellows/courses'),api.get('/api/fellows/me')]);

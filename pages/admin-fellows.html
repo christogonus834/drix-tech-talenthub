@@ -89,6 +89,13 @@
 
 <script src="/js/app.js"></script>
 <script>
+// ── ADMIN TOKEN GUARD ─────────────────────────────────────────────
+if (!localStorage.getItem('drix_admin_token')) {
+  window.location.href = '/admin/login';
+}
+
+</script>
+<script>
 let curPage = 1, selIds = [], selFellowId = null, selFellowData = null;
 
 async function loadTracks() {
