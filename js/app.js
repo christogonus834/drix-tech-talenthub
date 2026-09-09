@@ -1,7 +1,7 @@
 // ── API BASE — Render backend URL ────────────────────────────────────
 const API_BASE = 'https://drix-talenthub-backend.onrender.com';
 
-// ── TOKEN STORAGE (localStorage — no cross-domain cookie issues) ──────
+// ── TOKEN STORAGE ─────────────────────────────────────────────────────
 const auth = {
   getToken()        { return localStorage.getItem('drix_token'); },
   getAdminToken()   { return localStorage.getItem('drix_admin_token'); },
@@ -20,46 +20,84 @@ const api = {
     return h;
   },
   async get(url, isAdmin = false) {
-    const res = await fetch(API_BASE + url, {
-      headers: this.headers(isAdmin)
-    });
-    if (res.status === 401) {
-      isAdmin ? (auth.clearAdminToken(), window.location.href = '/admin/login')
-              : (auth.clearToken(), window.location.href = '/login');
+    try {
+      const res = await fetch(API_BASE + url, { headers: this.headers(isAdmin) });
+      if (res.status === 401) {
+        if (isAdmin) {
+          auth.clearAdminToken();
+          window.location.href = '/admin/login';
+        } else {
+          auth.clearToken();
+          window.location.href = '/login';
+        }
+        return null;
+      }
+      if (res.status === 403) {
+        if (isAdmin) {
+          auth.clearAdminToken();
+          window.location.href = '/admin/login';
+        } else {
+          auth.clearToken();
+          window.location.href = '/login';
+        }
+        return null;
+      }
+      return res.json();
+    } catch(err) {
+      console.error('API GET error:', url, err);
       return null;
     }
-    return res.json();
   },
   async post(url, data, isAdmin = false) {
-    const res = await fetch(API_BASE + url, {
-      method: 'POST',
-      headers: this.headers(isAdmin),
-      body: JSON.stringify(data)
-    });
-    return res.json();
+    try {
+      const res = await fetch(API_BASE + url, {
+        method: 'POST',
+        headers: this.headers(isAdmin),
+        body: JSON.stringify(data)
+      });
+      return res.json();
+    } catch(err) {
+      console.error('API POST error:', url, err);
+      return null;
+    }
   },
   async patch(url, data, isAdmin = false) {
-    const res = await fetch(API_BASE + url, {
-      method: 'PATCH',
-      headers: this.headers(isAdmin),
-      body: JSON.stringify(data)
-    });
-    return res.json();
+    try {
+      const res = await fetch(API_BASE + url, {
+        method: 'PATCH',
+        headers: this.headers(isAdmin),
+        body: JSON.stringify(data)
+      });
+      return res.json();
+    } catch(err) {
+      console.error('API PATCH error:', url, err);
+      return null;
+    }
   },
   async put(url, data, isAdmin = false) {
-    const res = await fetch(API_BASE + url, {
-      method: 'PUT',
-      headers: this.headers(isAdmin),
-      body: JSON.stringify(data)
-    });
-    return res.json();
+    try {
+      const res = await fetch(API_BASE + url, {
+        method: 'PUT',
+        headers: this.headers(isAdmin),
+        body: JSON.stringify(data)
+      });
+      return res.json();
+    } catch(err) {
+      console.error('API PUT error:', url, err);
+      return null;
+    }
   },
   async delete(url, isAdmin = false) {
-    const res = await fetch(API_BASE + url, {
-      method: 'DELETE',
-      headers: this.headers(isAdmin)
-    });
-    return res.json();
+    try {
+      const res = await fetch(API_BASE + url, {
+        method: 'DELETE',
+        headers: this.headers(isAdmin)
+      });
+      return res.json();
+    } catch(err) {
+      console.error('API DELETE error:', url, err);
+      return null;
+    }
   }
 };
 
