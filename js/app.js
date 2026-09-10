@@ -196,3 +196,72 @@ function setupFileDrop(dropId, inputId, onFile) {
     if (input.files[0]) onFile(input.files[0]);
   });
 }
+
+// ─── GEMINI AI ASSISTANT (replaces Claude) ────────────────────────────
+// Uses Gemini 1.5 Flash — fast and free tier available
+// Get your key at: https://aistudio.google.com/app/apikey
+const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+async function sendAIMessage(inputId, messagesId, context = '') {
+  const input = document.getElementById(inputId);
+  const msgs = document.getElementById(messagesId);
+  const text = input?.value?.trim();
+  if (!text || !msgs) return;
+  input.value = '';
+
+  // User bubble
+  msgs.innerHTML += `<div class="ai-msg user"><div class="ai-bubble">${text}</div></div>`;
+
+  // Typing indicator
+  const typingId = 'typing_' + Date.now();
+  msgs.innerHTML += `
+    <div class="ai-msg assistant" id="${typingId}">
+      <div class="ai-bubble">
+        <div class="ai-typing">
+          <div class="ai-dot"></div>
+          <div class="ai-dot"></div>
+          <div class="ai-dot"></div>
+        </div>
+      </div>
+    </div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    const response = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `You are a helpful AI learning assistant for the Drix Tech Talent Programme, a Nigerian tech training fellowship. Help students understand their coursework, answer tech questions, and guide their learning. Be concise, practical and encouraging. Keep answers short and clear.\n\nLesson context: ${context}\n\nStudent question: ${text}`
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 800,
+        }
+      })
+    });
+
+    const data = await response.json();
+    document.getElementById(typingId)?.remove();
+
+    if (data.error) {
+      // If API key not set yet
+      if (data.error.code === 400 || data.error.status === 'INVALID_ARGUMENT') {
+        msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble" style="color:var(--brand-warning);">AI assistant not configured yet. Admin needs to add the Gemini API key.</div></div>`;
+      } else {
+        throw new Error(data.error.message);
+      }
+    } else {
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'I could not process that. Please try again.';
+      msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble">${reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div></div>`;
+    }
+  } catch(e) {
+    document.getElementById(typingId)?.remove();
+    msgs.innerHTML += `<div class="ai-msg assistant"><div class="ai-bubble" style="color:var(--brand-danger);">Connection error. Please try again.</div></div>`;
+    console.error('Gemini error:', e);
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}

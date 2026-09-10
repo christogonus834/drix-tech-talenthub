@@ -627,3 +627,79 @@ svg { display: inline-block; vertical-align: middle; }
   .section { padding: 60px 24px; }
   .hero-3d-container { display: none; }
 }
+
+/* ═══════════════════════════════════════════════════════
+   GLOBAL MOBILE RESPONSIVE FIXES
+═══════════════════════════════════════════════════════ */
+
+/* Admin sidebar becomes overlay on mobile */
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    min-height: unset;
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+  .sidebar-logo { padding: 14px 16px; border-bottom: none; white-space: nowrap; }
+  .sidebar-nav { display: flex; flex-direction: row; gap: 2px; padding: 8px; overflow-x: auto; flex: 1; }
+  .sidebar-section-label { display: none; }
+  .sidebar-link { flex-direction: column; gap: 4px; padding: 8px 10px; font-size: 0.65rem; text-align: center; white-space: nowrap; }
+  .sidebar-link .icon { margin: 0 auto; }
+  .sidebar-bottom { padding: 8px; border-top: none; border-left: 1px solid var(--border); display: flex; align-items: center; }
+  .main-content { padding: 20px 16px; }
+}
+
+@media (max-width: 600px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .flex-between { flex-wrap: wrap; gap: 10px; }
+  .tab-bar { flex-wrap: wrap; width: 100%; }
+  .tab-btn { flex: 1; text-align: center; }
+  .navbar { padding: 0 16px; }
+  .nav-links { gap: 14px; }
+  .nav-links a:not(.btn) { display: none; }
+  .section { padding: 60px 20px; }
+  h1 { font-size: 1.3rem !important; }
+  .modal { padding: 24px 18px; }
+  .card { padding: 16px; }
+  table { font-size: 0.76rem; }
+  th, td { padding: 10px 10px; }
+}
+
+@media (max-width: 400px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .sidebar-link { padding: 6px 8px; }
+  .btn-lg { padding: 12px 20px; font-size: 0.86rem; }
+}
+
+/* Dashboard welcome banner on mobile */
+@media (max-width: 600px) {
+  .welcome-banner { flex-direction: column; align-items: flex-start; gap: 12px; padding: 20px; }
+  .welcome-banner > div:last-child { text-align: left; align-self: stretch; display: flex; align-items: center; justify-content: space-between; }
+}
+
+/* Module list mobile */
+@media (max-width: 600px) {
+  .module-header { flex-wrap: wrap; gap: 8px; }
+  .module-header > div:nth-child(3) { width: 100%; display: flex; flex-wrap: wrap; gap: 5px; }
+  .lesson-row { flex-wrap: wrap; gap: 8px; }
+}
+
+/* AI box mobile */
+@media (max-width: 600px) {
+  .ai-messages { height: 180px; }
+  .ai-input-row { padding: 8px 12px; }
+}
+
+/* Registration page mobile (extra safety) */
+@media (max-width: 768px) {
+  .step-nav { gap: 8px; }
+  .step-nav .btn { flex: 1; justify-content: center; }
+}
