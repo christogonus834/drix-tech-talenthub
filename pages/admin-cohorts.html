@@ -109,7 +109,7 @@ async function saveCohort() {
   const id = document.getElementById('editCohortId').value;
   const payload = { name: document.getElementById('cohortName').value, description: document.getElementById('cohortDesc').value, start_date: document.getElementById('cohortStart').value || null, end_date: document.getElementById('cohortEnd').value || null, max_fellows: parseInt(document.getElementById('cohortMax').value) || 500, is_active: document.getElementById('cohortActive').checked };
   if (!payload.name) { showToast('Cohort name is required.', 'error'); return; }
-  const r = id ? await api.put(`/api/admin/cohorts/${id}`, payload) : await api.post('/api/admin/cohorts', payload);
+  const r = id ? await api.put(`/api/admin/cohorts/${id}`, payload, true) : await api.post('/api/admin/cohorts', payload, true);
   if (r.success) { showToast(`Cohort ${id ? 'updated' : 'created'}!`, 'success'); closeModal('cohortModal'); resetCohort(); loadCohorts(); }
   else showToast(r.error || 'Failed.', 'error');
 }

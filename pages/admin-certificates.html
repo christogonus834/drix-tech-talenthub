@@ -5,86 +5,85 @@
 <title>Certificates — Drix Admin</title>
 <link rel="stylesheet" href="/css/style.css"/>
 <style>
-.tab-bar{display:flex;gap:6px;margin-bottom:24px;background:var(--bg3);padding:5px;border-radius:var(--r);width:fit-content;}
-.tab-btn{padding:8px 22px;border-radius:calc(var(--r) - 2px);border:none;background:transparent;color:var(--muted);font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:var(--font);}
-.tab-btn.active{background:var(--surface);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,0.2);}
-.cert-table{width:100%;border-collapse:collapse;}
-.cert-table th{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted2);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);}
-.cert-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:0.83rem;vertical-align:middle;}
-.cert-table tr:last-child td{border-bottom:none;}
-.cert-table tr:hover td{background:var(--bg3);}
-.av{width:34px;height:34px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;overflow:hidden;flex-shrink:0;}
-.av img{width:100%;height:100%;object-fit:cover;}
-.badge-pending{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.25);padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:600;}
-.badge-approved{background:rgba(6,214,160,0.12);color:#06d6a0;border:1px solid rgba(6,214,160,0.2);padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:600;}
-.badge-rejected{background:rgba(244,63,94,0.1);color:#f43f5e;border:1px solid rgba(244,63,94,0.15);padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:600;}
-.badge-issued{background:rgba(124,110,247,0.12);color:var(--accent2);border:1px solid rgba(124,110,247,0.2);padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:600;}
+.score-ring{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;font-size:0.72rem;font-weight:800;border:2.5px solid;}
+.score-high{border-color:var(--brand-accent);color:var(--brand-accent);background:rgba(6,214,160,0.08);}
+.score-mid{border-color:var(--brand-primary);color:var(--brand-primary);background:rgba(124,110,247,0.08);}
+.score-low{border-color:var(--brand-warning);color:var(--brand-warning);background:rgba(251,191,36,0.08);}
 </style>
 </head>
 <body>
+<div class="layout">
 <aside class="sidebar">
   <div class="sidebar-logo">DRIX Admin<span>Management Portal</span></div>
   <nav class="sidebar-nav">
     <div class="sidebar-section-label">Overview</div>
-    <a href="/admin/dashboard" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
-    <a href="/admin/fellows" class="sidebar-link"><span class="icon">👥</span> Fellows</a>
+    <a href="/admin/dashboard" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>Dashboard</a>
+    <a href="/admin/fellows" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>Fellows</a>
     <div class="sidebar-section-label">Content</div>
-    <a href="/admin/courses" class="sidebar-link"><span class="icon">📚</span> Courses</a>
-    <a href="/admin/cohorts" class="sidebar-link"><span class="icon">🎓</span> Cohorts</a>
+    <a href="/admin/courses" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Tracks & Modules</a>
+    <a href="/admin/cohorts" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Cohorts</a>
+    <a href="/admin/certificates" class="sidebar-link active"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></span>Certificates</a>
+    <a href="/admin/messages" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>Messages</a>
     <div class="sidebar-section-label">System</div>
-    <a href="/admin/settings" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
-    <a href="/admin/certificates" class="sidebar-link active"><span class="icon">📜</span> Certificates</a>
+    <a href="/admin/settings" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>Settings</a>
   </nav>
-  <div class="sidebar-bottom"><button onclick="adminLogout()" class="btn btn-outline w-full btn-sm">← Sign Out</button></div>
+  <div class="sidebar-bottom"><button onclick="adminLogout()" class="btn btn-outline w-full btn-sm">Sign Out</button></div>
 </aside>
 
 <main class="main-content">
   <div class="flex-between mb-6">
-    <div><h1 style="font-size:1.5rem;letter-spacing:-0.02em;">Certificates</h1><p style="color:var(--muted);font-size:0.82rem;">Manage issued certificates and fellow requests</p></div>
+    <div>
+      <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-0.03em;">Certificates</h1>
+      <p style="color:var(--muted);font-size:0.82rem;margin-top:3px;">Review requests and manage issued certificates</p>
+    </div>
   </div>
 
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="showTab('requests')">📥 Requests <span id="reqBadge" style="display:none;background:var(--accent);color:white;border-radius:50px;padding:1px 7px;font-size:0.66rem;margin-left:4px;"></span></button>
-    <button class="tab-btn" onclick="showTab('issued')">📜 All Issued</button>
+    <button class="tab-btn active" id="tab1" onclick="showTab('requests')">
+      Requests <span id="reqCount" style="display:none;background:var(--brand-danger);color:white;border-radius:50px;padding:1px 7px;font-size:0.62rem;margin-left:4px;"></span>
+    </button>
+    <button class="tab-btn" id="tab2" onclick="showTab('issued')">All Issued</button>
   </div>
 
-  <!-- REQUESTS TAB -->
+  <!-- REQUESTS -->
   <div id="tab-requests">
     <div class="card" style="padding:0;overflow:hidden;">
-      <div id="requestsTable"><div style="padding:40px;text-align:center;"><span class="loader"></span></div></div>
+      <div id="requestsTable"><div class="flex-center" style="padding:40px;"><span class="loader"></span></div></div>
     </div>
   </div>
 
-  <!-- ISSUED TAB -->
+  <!-- ISSUED -->
   <div id="tab-issued" style="display:none;">
     <div class="card" style="padding:0;overflow:hidden;">
-      <div id="issuedTable"><div style="padding:40px;text-align:center;"><span class="loader"></span></div></div>
+      <div id="issuedTable"><div class="flex-center" style="padding:40px;"><span class="loader"></span></div></div>
     </div>
   </div>
 </main>
+</div>
 
-<!-- Approve modal -->
+<!-- APPROVE MODAL -->
 <div class="modal-overlay" id="approveModal">
   <div class="modal" style="max-width:420px;">
-    <div class="modal-header"><div class="modal-title">✅ Approve Certificate</div><button class="modal-close" onclick="closeModal('approveModal')">✕</button></div>
+    <div class="modal-header"><div class="modal-title">Approve Certificate</div><button class="modal-close" onclick="closeModal('approveModal')">✕</button></div>
     <input type="hidden" id="approveReqId"/>
-    <div class="form-group"><label class="form-label">Certificate Title</label><input type="text" class="form-control" id="approveTitle" placeholder="Certificate of Completion"/></div>
-    <div class="form-group" style="margin-bottom:20px;"><label class="form-label">Grade</label><input type="text" class="form-control" id="approveGrade" placeholder="Pass / Merit / Distinction"/></div>
+    <div id="approveScoreInfo" style="background:rgba(6,214,160,0.06);border:1px solid rgba(6,214,160,0.15);border-radius:var(--r);padding:12px 14px;margin-bottom:16px;font-size:0.82rem;"></div>
+    <div class="form-group"><label class="form-label">Certificate Title</label><input type="text" class="form-control" id="approveTitle" value="Certificate of Completion"/></div>
+    <div class="form-group" style="margin-bottom:20px;"><label class="form-label">Grade (auto-set from score, editable)</label><input type="text" class="form-control" id="approveGrade" placeholder="Pass / Merit / Distinction"/></div>
     <div style="display:flex;gap:10px;">
-      <button class="btn btn-primary" onclick="confirmApprove()">✅ Issue Certificate</button>
+      <button class="btn btn-success" onclick="confirmApprove()">Issue Certificate</button>
       <button class="btn btn-outline" onclick="closeModal('approveModal')">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- Reject modal -->
+<!-- REJECT MODAL -->
 <div class="modal-overlay" id="rejectModal">
   <div class="modal" style="max-width:420px;">
-    <div class="modal-header"><div class="modal-title">❌ Reject Request</div><button class="modal-close" onclick="closeModal('rejectModal')">✕</button></div>
+    <div class="modal-header"><div class="modal-title">Reject Request</div><button class="modal-close" onclick="closeModal('rejectModal')">✕</button></div>
     <input type="hidden" id="rejectReqId"/>
     <div class="form-group" style="margin-bottom:20px;"><label class="form-label">Reason (sent to fellow)</label><input type="text" class="form-control" id="rejectReason" placeholder="e.g. Incomplete coursework"/></div>
     <div style="display:flex;gap:10px;">
-      <button class="btn btn-danger" onclick="confirmReject()">❌ Reject</button>
+      <button class="btn btn-danger" onclick="confirmReject()">Reject</button>
       <button class="btn btn-outline" onclick="closeModal('rejectModal')">Cancel</button>
     </div>
   </div>
@@ -92,83 +91,101 @@
 
 <script src="/js/app.js"></script>
 <script>
-// ── ADMIN TOKEN GUARD ─────────────────────────────────────────────
-if (!localStorage.getItem('drix_admin_token')) {
-  window.location.href = '/admin/login';
-}
+if (!auth.getAdminToken()) window.location.href = '/admin/login';
 
-</script>
-<script>
 function showTab(tab) {
   document.getElementById('tab-requests').style.display = tab === 'requests' ? 'block' : 'none';
   document.getElementById('tab-issued').style.display = tab === 'issued' ? 'block' : 'none';
-  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', (i === 0 && tab === 'requests') || (i === 1 && tab === 'issued')));
+  document.getElementById('tab1').classList.toggle('active', tab === 'requests');
+  document.getElementById('tab2').classList.toggle('active', tab === 'issued');
   if (tab === 'issued') loadIssued();
+}
+
+function scoreClass(s) {
+  if (!s) return 'score-mid';
+  return s >= 90 ? 'score-high' : s >= 80 ? 'score-mid' : 'score-low';
+}
+function autoGrade(s) {
+  if (!s) return 'Pass';
+  return s >= 90 ? 'Distinction' : s >= 80 ? 'Merit' : 'Pass';
 }
 
 async function loadRequests() {
   const data = await api.get('/api/admin/certificates/requests/all', true);
-  const pending = data?.filter(r => r.status === 'pending') || [];
-  const badge = document.getElementById('reqBadge');
-  if (pending.length) { badge.style.display = 'inline'; badge.textContent = pending.length; }
+  const pending = (data || []).filter(r => r.status === 'pending');
+
+  if (pending.length > 0) {
+    const badge = document.getElementById('reqCount');
+    badge.style.display = 'inline'; badge.textContent = pending.length;
+  }
 
   document.getElementById('requestsTable').innerHTML = !data?.length
-    ? '<div style="padding:40px;text-align:center;color:var(--muted);">No certificate requests yet</div>'
-    : `<table class="cert-table">
-        <thead><tr>
-          <th>Fellow</th><th>ID</th><th>Track</th><th>Requested</th><th>Status</th><th>Actions</th>
-        </tr></thead>
+    ? '<div class="empty-state" style="padding:48px;"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg><p>No certificate requests yet</p></div>'
+    : `<div class="table-wrap"><table>
+        <thead><tr><th>Fellow</th><th>Track</th><th>Score</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>${data.map(r => `
           <tr>
             <td><div style="display:flex;align-items:center;gap:10px;">
-              <div class="av">${r.fellows?.profile_photo ? `<img src="${r.fellows.profile_photo}"/>` : (r.fellows?.full_name?.charAt(0) || '?')}</div>
-              <div style="font-weight:600;">${r.fellows?.full_name || '—'}</div>
+              <div class="avatar">${r.fellows?.profile_photo ? `<img src="${r.fellows.profile_photo}"/>` : (r.fellows?.full_name?.charAt(0)||'?')}</div>
+              <div>
+                <div style="font-weight:600;">${r.fellows?.full_name || '—'}</div>
+                <div style="font-size:0.7rem;color:var(--muted);font-family:var(--mono);">${r.fellows?.fellow_id || ''}</div>
+              </div>
             </div></td>
-            <td style="font-family:monospace;font-size:0.78rem;color:var(--accent2);">${r.fellows?.fellow_id || '—'}</td>
-            <td>${r.tracks?.icon || ''} ${r.tracks?.name || r.fellows?.tracks?.name || '—'}</td>
-            <td style="color:var(--muted);">${formatDate(r.requested_at)}</td>
-            <td><span class="badge-${r.status}">${r.status}</span></td>
+            <td style="font-size:0.82rem;">${r.tracks?.icon || ''} ${r.tracks?.name || r.fellows?.tracks?.name || '—'}</td>
+            <td>
+              <div class="score-ring ${scoreClass(r.score)}">${r.score != null ? r.score+'%' : '—'}</div>
+            </td>
+            <td style="font-size:0.78rem;color:var(--muted);">${formatDate(r.requested_at)}</td>
+            <td><span class="badge badge-${r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : 'pending'}">${r.status}</span></td>
             <td>
               ${r.status === 'pending' ? `
                 <div style="display:flex;gap:6px;">
-                  <button class="btn btn-sm" style="background:rgba(6,214,160,0.12);color:var(--success);border:1px solid rgba(6,214,160,0.2);border-radius:var(--r);padding:6px 12px;cursor:pointer;font-family:var(--font);font-size:0.76rem;" onclick="openApprove('${r.id}')">✅ Approve</button>
-                  <button class="btn btn-sm" style="background:rgba(244,63,94,0.1);color:var(--danger);border:1px solid rgba(244,63,94,0.15);border-radius:var(--r);padding:6px 12px;cursor:pointer;font-family:var(--font);font-size:0.76rem;" onclick="openReject('${r.id}')">❌ Reject</button>
-                </div>` : `<span style="color:var(--muted);font-size:0.78rem;">${r.status === 'rejected' ? '— ' + (r.reject_reason || '') : 'Issued'}</span>`}
+                  <button class="btn btn-success btn-sm" onclick="openApprove('${r.id}', ${r.score||0}, '${(r.fellows?.full_name||'').replace(/'/g,"\\'")}')">Approve</button>
+                  <button class="btn btn-danger btn-sm" onclick="openReject('${r.id}')">Reject</button>
+                </div>`
+              : `<span style="font-size:0.76rem;color:var(--muted);">${r.status === 'rejected' ? (r.reject_reason || '—') : 'Issued'}</span>`}
             </td>
           </tr>`).join('')}
         </tbody>
-      </table>`;
+      </table></div>`;
 }
 
 async function loadIssued() {
   const data = await api.get('/api/admin/certificates/all', true);
   document.getElementById('issuedTable').innerHTML = !data?.length
-    ? '<div style="padding:40px;text-align:center;color:var(--muted);">No certificates issued yet</div>'
-    : `<table class="cert-table">
-        <thead><tr>
-          <th>Fellow</th><th>Certificate ID</th><th>Track</th><th>Grade</th><th>Type</th><th>Issued</th><th></th>
-        </tr></thead>
+    ? '<div class="empty-state" style="padding:48px;"><p>No certificates issued yet</p></div>'
+    : `<div class="table-wrap"><table>
+        <thead><tr><th>Fellow</th><th>Certificate ID</th><th>Track</th><th>Score</th><th>Grade</th><th>Type</th><th>Issued</th><th></th></tr></thead>
         <tbody>${data.map(c => `
           <tr>
             <td><div style="display:flex;align-items:center;gap:10px;">
-              <div class="av">${c.fellows?.profile_photo ? `<img src="${c.fellows.profile_photo}"/>` : (c.fellows?.full_name?.charAt(0) || '?')}</div>
-              <div><div style="font-weight:600;">${c.fellows?.full_name || '—'}</div><div style="font-size:0.72rem;color:var(--muted);">${c.fellows?.fellow_id || ''}</div></div>
+              <div class="avatar">${c.fellows?.profile_photo ? `<img src="${c.fellows.profile_photo}"/>` : (c.fellows?.full_name?.charAt(0)||'?')}</div>
+              <div>
+                <div style="font-weight:600;">${c.fellows?.full_name || '—'}</div>
+                <div style="font-size:0.7rem;color:var(--muted);">${c.fellows?.fellow_id || ''}</div>
+              </div>
             </div></td>
-            <td style="font-family:monospace;font-size:0.78rem;color:var(--accent2);">${c.certificate_id}</td>
-            <td>${c.tracks?.icon || ''} ${c.tracks?.name || '—'}</td>
-            <td><span class="badge-issued">${c.grade || 'Pass'}</span></td>
-            <td style="color:var(--muted);font-size:0.78rem;">${c.issued_manually ? '👤 Manual' : '⚙️ Auto'}</td>
-            <td style="color:var(--muted);">${formatDate(c.issued_at)}</td>
-            <td><button class="btn btn-outline btn-sm" onclick="revokeCert('${c.id}')">Revoke</button></td>
+            <td style="font-family:var(--mono);font-size:0.72rem;color:var(--brand-secondary);">${c.certificate_id}</td>
+            <td style="font-size:0.82rem;">${c.tracks?.icon || ''} ${c.tracks?.name || '—'}</td>
+            <td>${c.score != null ? `<div class="score-ring ${scoreClass(c.score)}">${c.score}%</div>` : '—'}</td>
+            <td><span class="badge badge-info">${c.grade || 'Pass'}</span></td>
+            <td style="font-size:0.74rem;color:var(--muted);">${c.issued_manually ? 'Manual' : 'Auto'}</td>
+            <td style="font-size:0.76rem;color:var(--muted);">${formatDate(c.issued_at)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="revokeCert('${c.id}')">Revoke</button></td>
           </tr>`).join('')}
         </tbody>
-      </table>`;
+      </table></div>`;
 }
 
-function openApprove(id) {
+function openApprove(id, score, fellowName) {
   document.getElementById('approveReqId').value = id;
-  document.getElementById('approveTitle').value = '';
-  document.getElementById('approveGrade').value = '';
+  document.getElementById('approveTitle').value = 'Certificate of Completion';
+  document.getElementById('approveGrade').value = autoGrade(score);
+  document.getElementById('approveScoreInfo').innerHTML = `
+    <strong>${fellowName}</strong> completed with a score of
+    <strong style="color:${score>=90?'var(--brand-accent)':score>=80?'var(--brand-primary)':'var(--brand-warning)'};">${score}%</strong>.
+    Auto grade: <strong>${autoGrade(score)}</strong>`;
   openModal('approveModal');
 }
 function openReject(id) {
@@ -182,25 +199,25 @@ async function confirmApprove() {
   const r = await api.post(`/api/admin/certificates/requests/${id}/approve`, {
     title: document.getElementById('approveTitle').value,
     grade: document.getElementById('approveGrade').value,
-  });
-  if (r?.success) { showToast(`✅ Certificate issued! ID: ${r.certificate_id}`, 'success'); closeModal('approveModal'); loadRequests(); }
-  else showToast(r?.error || 'Failed.', 'error');
+  }, true);
+  if (r?.success) { showToast(`Certificate issued! ID: ${r.certificate_id}`, 'success'); closeModal('approveModal'); loadRequests(); }
+  else showToast(r?.error || 'Failed', 'error');
 }
 
 async function confirmReject() {
   const id = document.getElementById('rejectReqId').value;
   const r = await api.post(`/api/admin/certificates/requests/${id}/reject`, {
-    reason: document.getElementById('rejectReason').value,
-  });
-  if (r?.success) { showToast('Request rejected.', 'info'); closeModal('rejectModal'); loadRequests(); }
-  else showToast(r?.error || 'Failed.', 'error');
+    reason: document.getElementById('rejectReason').value
+  }, true);
+  if (r?.success) { showToast('Request rejected', 'info'); closeModal('rejectModal'); loadRequests(); }
+  else showToast(r?.error || 'Failed', 'error');
 }
 
 async function revokeCert(id) {
   confirmAction('Revoke this certificate? This cannot be undone.', async () => {
     const r = await api.delete(`/api/admin/certificates/${id}`, true);
-    if (r?.success) { showToast('Certificate revoked.', 'info'); loadIssued(); }
-    else showToast('Failed.', 'error');
+    if (r?.success) { showToast('Certificate revoked', 'info'); loadIssued(); }
+    else showToast('Failed', 'error');
   });
 }
 

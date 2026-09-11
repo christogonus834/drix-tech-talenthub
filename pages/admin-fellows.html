@@ -204,7 +204,7 @@ async function issueCert() {
   const title = document.getElementById('certTitle').value || 'Certificate of Completion';
   const grade = document.getElementById('certGrade').value || 'Pass';
   const includePhoto = document.getElementById('certIncludePhoto').value === 'yes';
-  const r = await api.post('/api/admin/certificates/issue', {
+  const r = PLACEHOLDER
     fellow_id: selFellowId, title, grade,
     fellow_photo: includePhoto && selFellowData?.profile_photo ? selFellowData.profile_photo : null
   });

@@ -291,7 +291,7 @@ async function saveSettings() {
     slide_2: getVal('slide_2'),
     slide_3: getVal('slide_3'),
     slide_4: getVal('slide_4'),
-  });
+  }, true);
 
   btn.disabled = false; btn.textContent = '💾 Save All Settings';
   const box = document.getElementById('alertBox');
