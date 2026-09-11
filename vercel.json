@@ -18,6 +18,7 @@
     { "source": "/admin/cohorts", "destination": "/pages/admin-cohorts.html" },
     { "source": "/admin/settings", "destination": "/pages/admin-settings.html" },
     { "source": "/admin/certificates", "destination": "/pages/admin-certificates.html" },
-    { "source": "/admin/messages", "destination": "/pages/admin-messages.html" }
+    { "source": "/admin/messages", "destination": "/pages/admin-messages.html" },
+    { "source": "/admin/exam", "destination": "/pages/admin-exam.html" }
   ]
 }

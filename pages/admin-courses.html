@@ -496,7 +496,7 @@ async function deleteLesson(id) {
 }
 
 function openExamEditor(trackId) {
-  showToast('Exam editor — coming in next update', 'info');
+  window.location.href = `/admin/exam?track=${trackId}&name=${encodeURIComponent(selectedTrackName)}`;
 }
 
 loadTracks();
