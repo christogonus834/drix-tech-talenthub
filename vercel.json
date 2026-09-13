@@ -7,6 +7,7 @@
     { "source": "/terms", "destination": "/pages/terms.html" },
     { "source": "/contact", "destination": "/pages/contact.html" },
     { "source": "/blog", "destination": "/pages/blog.html" },
+    { "source": "/blog/:slug", "destination": "/pages/blog-post.html?slug=:slug" },
     { "source": "/dashboard", "destination": "/pages/dashboard.html" },
     { "source": "/dashboard/courses", "destination": "/pages/dashboard-courses.html" },
     { "source": "/dashboard/community", "destination": "/pages/community.html" },
@@ -21,6 +22,7 @@
     { "source": "/admin/cohorts", "destination": "/pages/admin-cohorts.html" },
     { "source": "/admin/settings", "destination": "/pages/admin-settings.html" },
     { "source": "/admin/certificates", "destination": "/pages/admin-certificates.html" },
+    { "source": "/admin/blog", "destination": "/pages/admin-blog.html" },
     { "source": "/admin/messages", "destination": "/pages/admin-messages.html" },
     { "source": "/admin/exam", "destination": "/pages/admin-exam.html" }
   ]
