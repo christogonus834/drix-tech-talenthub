@@ -15,6 +15,7 @@
     <div class="sidebar-section-label">Content</div>
     <a href="/admin/courses" class="sidebar-link"><span class="icon">📚</span> Courses</a>
     <a href="/admin/cohorts" class="sidebar-link active"><span class="icon">🎓</span> Cohorts</a>
+    <a href="/admin/blog" class="sidebar-link"><span class="icon">📝</span> Blog</a>
     <div class="sidebar-section-label">System</div>
     <a href="/admin/settings" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
   </nav>
@@ -110,15 +111,15 @@ async function saveCohort() {
   const payload = { name: document.getElementById('cohortName').value, description: document.getElementById('cohortDesc').value, start_date: document.getElementById('cohortStart').value || null, end_date: document.getElementById('cohortEnd').value || null, max_fellows: parseInt(document.getElementById('cohortMax').value) || 500, is_active: document.getElementById('cohortActive').checked };
   if (!payload.name) { showToast('Cohort name is required.', 'error'); return; }
   const r = id ? await api.put(`/api/admin/cohorts/${id}`, payload, true) : await api.post('/api/admin/cohorts', payload, true);
-  if (r.success) { showToast(`Cohort ${id ? 'updated' : 'created'}!`, 'success'); closeModal('cohortModal'); resetCohort(); loadCohorts(); }
-  else showToast(r.error || 'Failed.', 'error');
+  if (r?.success || r?.data) { showToast(`Cohort ${id ? 'updated' : 'created'}!`, 'success'); closeModal('cohortModal'); resetCohort(); loadCohorts(); }
+  else showToast(r?.error || 'Failed — check Render logs', 'error');
 }
 
 async function delCohort(id) {
   confirmAction('Delete this cohort?', async () => {
     const r = await api.delete(`/api/admin/cohorts/${id}`, true);
-    if (r.success) { showToast('Deleted.', 'success'); loadCohorts(); }
-    else showToast('Failed.', 'error');
+    if (r?.success) { showToast('Deleted.', 'success'); loadCohorts(); }
+    else showToast(r?.error || 'Failed.', 'error');
   });
 }
 loadCohorts();

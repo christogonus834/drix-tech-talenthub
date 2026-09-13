@@ -25,6 +25,7 @@
     <div class="sidebar-section-label">Content</div>
     <a href="/admin/courses" class="sidebar-link"><span class="icon">📚</span> Courses</a>
     <a href="/admin/cohorts" class="sidebar-link"><span class="icon">🎓</span> Cohorts</a>
+    <a href="/admin/blog" class="sidebar-link"><span class="icon">📝</span> Blog</a>
     <div class="sidebar-section-label">System</div>
     <a href="/admin/settings" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
   </nav>
@@ -204,12 +205,12 @@ async function issueCert() {
   const title = document.getElementById('certTitle').value || 'Certificate of Completion';
   const grade = document.getElementById('certGrade').value || 'Pass';
   const includePhoto = document.getElementById('certIncludePhoto').value === 'yes';
-  const r = PLACEHOLDER
+  const r = await api.post('/api/admin/certificates/issue', {
     fellow_id: selFellowId, title, grade,
     fellow_photo: includePhoto && selFellowData?.profile_photo ? selFellowData.profile_photo : null
-  });
-  if (r.success) { showToast(`Certificate issued! ID: ${r.certificate_id}`, 'success'); closeModal('certModal'); }
-  else showToast(r.error || 'Failed.', 'error');
+  }, true);
+  if (r?.success) { showToast(`Certificate issued! ID: ${r.certificate_id}`, 'success'); closeModal('certModal'); }
+  else showToast(r?.error || 'Failed.', 'error');
 }
 
 loadTracks();
