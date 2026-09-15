@@ -40,9 +40,9 @@
     <div class="sidebar-section-label">Content</div>
     <a href="/admin/courses" class="sidebar-link"><span class="icon">📚</span> Courses</a>
     <a href="/admin/cohorts" class="sidebar-link"><span class="icon">🎓</span> Cohorts</a>
-    <a href="/admin/blog" class="sidebar-link"><span class="icon">📝</span> Blog</a>
     <div class="sidebar-section-label">System</div>
     <a href="/admin/settings" class="sidebar-link active"><span class="icon">⚙️</span> Settings</a>
+    <a href="/admin/blog" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Blog</a>
     <a href="/admin/certificates" class="sidebar-link"><span class="icon">📜</span> Certificates</a>
   </nav>
   <div class="sidebar-bottom"><button onclick="adminLogout()" class="btn btn-outline w-full btn-sm">← Sign Out</button></div>
@@ -189,6 +189,7 @@
 </main>
 
 <script src="/js/app.js"></script>
+<script src="/js/mobile.js"></script>
 <script>
 // ── ADMIN TOKEN GUARD ─────────────────────────────────────────────
 if (!localStorage.getItem('drix_admin_token')) {

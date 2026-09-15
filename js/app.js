@@ -81,14 +81,6 @@ const api = {
       return this._handle(res, isAdmin);
     } catch(e) { console.error('PATCH', url, e); return null; }
   },
-  async put(url, data, isAdmin = false) {
-    try {
-      const res = await fetch(API_BASE + url, {
-        method: 'PUT', headers: this._headers(isAdmin), body: JSON.stringify(data)
-      });
-      return this._handle(res, isAdmin);
-    } catch(e) { console.error('PUT', url, e); return null; }
-  },
   async delete(url, isAdmin = false) {
     try {
       const res = await fetch(API_BASE + url, {
