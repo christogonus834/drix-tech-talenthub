@@ -118,6 +118,7 @@
           <option value="document">Word / Document</option>
           <option value="audio">Audio</option>
           <option value="article">Article / Text</option>
+          <option value="link">Link (URL)</option>
         </select>
       </div>
     </div>
@@ -140,6 +141,14 @@
 
     <div id="textContentSection" style="display:none;">
       <div class="form-group"><label class="form-label">Article Content</label><textarea class="form-control" id="lessonContent" rows="6" placeholder="Write article content here..."></textarea></div>
+    </div>
+
+    <div id="linkSection" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">Paste Link URL *</label>
+        <input type="url" class="form-control" id="lessonLinkUrl" placeholder="https://youtube.com/watch?v=... or any URL"/>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:5px;">When a fellow clicks this lesson, it will open the link in a new tab.</div>
+      </div>
     </div>
 
     <div class="grid-2">
@@ -393,8 +402,11 @@ async function handleFile(file) {
 
 function onLessonTypeChange() {
   const t = document.getElementById('lessonType').value;
-  document.getElementById('fileUploadSection').style.display = t === 'article' ? 'none' : 'block';
-  document.getElementById('textContentSection').style.display = t === 'article' ? 'block' : 'none';
+  const isArticle = t === 'article';
+  const isLink = t === 'link';
+  document.getElementById('fileUploadSection').style.display = (isArticle || isLink) ? 'none' : 'block';
+  document.getElementById('textContentSection').style.display = isArticle ? 'block' : 'none';
+  document.getElementById('linkSection').style.display = isLink ? 'block' : 'none';
   const accept = { video:'video/*', pdf:'.pdf', document:'.doc,.docx,.ppt,.pptx', audio:'audio/*' };
   document.getElementById('lessonFileInput').accept = accept[t] || '*';
 }
@@ -418,6 +430,8 @@ function openAddLesson(moduleId) {
   document.getElementById('lessonFileUrl').value = '';
   uploadedFileUrl = '';
   document.getElementById('saveLessonBtn').textContent = 'Add Lesson';
+  const linkEl = document.getElementById('lessonLinkUrl'); if (linkEl) linkEl.value = '';
+  const linkSec = document.getElementById('linkSection'); if (linkSec) linkSec.style.display = 'none';
   document.getElementById('saveLessonBtn').disabled = false;
   openModal('addLessonModal');
 }
@@ -444,25 +458,52 @@ async function saveModule() {
 }
 
 async function saveLesson() {
+  const btn = document.getElementById('saveLessonBtn');
   const title = document.getElementById('lessonTitle').value.trim();
   const type = document.getElementById('lessonType').value;
-  if (!title) return showToast('Title required', 'error');
-  if (type !== 'article' && !uploadedFileUrl && !document.getElementById('lessonFileUrl').value) {
-    return showToast('Please upload a file first', 'error');
+
+  if (!title) return showToast('Title is required', 'error');
+
+  // Determine content_url based on type
+  let content_url = null;
+  if (type === 'link') {
+    const linkVal = document.getElementById('lessonLinkUrl').value.trim();
+    if (!linkVal) return showToast('Please paste a link URL', 'error');
+    // Make sure it has http
+    content_url = linkVal.startsWith('http') ? linkVal : 'https://' + linkVal;
+  } else if (type === 'article') {
+    // No URL needed — content_text is used
+  } else {
+    // File types — must have uploaded file
+    content_url = uploadedFileUrl || document.getElementById('lessonFileUrl').value || null;
+    if (!content_url) return showToast('Please upload a file first', 'error');
   }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Saving...';
+
   const r = await api.post('/api/modules/admin/lesson', {
     module_id: document.getElementById('lessonModuleId').value,
     title, type,
     description: document.getElementById('lessonDesc').value,
-    content_url: uploadedFileUrl || document.getElementById('lessonFileUrl').value || null,
+    content_url,
     content_text: document.getElementById('lessonContent').value || null,
     duration_minutes: parseInt(document.getElementById('lessonDuration').value) || 0,
     points_reward: parseInt(document.getElementById('lessonPoints').value) || 10,
     order_index: parseInt(document.getElementById('lessonOrder').value) || 0,
     is_free_preview: document.getElementById('lessonFreePreview').checked
   }, true);
-  if (r?.success) { showToast('Lesson added!', 'success'); closeModal('addLessonModal'); selectTrack(selectedTrackId, selectedTrackName); }
-  else showToast(r?.error || 'Failed — check Render logs', 'error');
+
+  btn.disabled = false;
+  btn.textContent = 'Add Lesson';
+
+  if (r?.success) {
+    showToast('Lesson added!', 'success');
+    closeModal('addLessonModal');
+    selectTrack(selectedTrackId, selectedTrackName);
+  } else {
+    showToast(r?.error || 'Failed to add lesson', 'error');
+  }
 }
 
 async function saveAssignment() {

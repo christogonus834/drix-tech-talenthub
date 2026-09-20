@@ -145,9 +145,10 @@ async function loadCourses() {
             pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
             document: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
             audio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>',
-            quiz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+            quiz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+            link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
           };
-          const typeColor = { video:'lesson-type-video', pdf:'lesson-type-pdf', document:'lesson-type-document', audio:'lesson-type-quiz', quiz:'lesson-type-quiz', article:'lesson-type-document' };
+          const typeColor = { video:'lesson-type-video', pdf:'lesson-type-pdf', document:'lesson-type-document', audio:'lesson-type-quiz', quiz:'lesson-type-quiz', article:'lesson-type-document', link:'lesson-type-video' };
           return `
             <div class="lesson-row ${done?'completed':''}" onclick="openLesson('${l.id}','${l.title.replace(/'/g,"\\'")}','${m.title.replace(/'/g,"\\'")}','${l.type}','${l.content_url||''}','${l.content_text||''}')">
               <div class="lesson-type-icon ${typeColor[l.type]||'lesson-type-document'}">${typeIcon[l.type]||typeIcon.document}</div>
@@ -201,6 +202,15 @@ function openLesson(id, title, moduleTitle, type, contentUrl, contentText) {
     html = `<div class="doc-wrap"><audio controls style="width:100%;margin-top:8px;" src="${contentUrl}"></audio></div>`;
   } else if (type === 'article' && contentText) {
     html = `<div class="doc-wrap">${contentText.replace(/\n/g,'<br>')}</div>`;
+  } else if (type === 'link' && contentUrl) {
+    html = `<div class="doc-wrap" style="text-align:center;padding:40px 20px;">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="1.5" style="margin-bottom:16px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <p style="margin-bottom:20px;color:var(--muted);">This lesson links to an external resource.</p>
+      <a href="${contentUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+        <span class="icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span>
+        Open Link
+      </a>
+    </div>`;
   } else {
     html = `<div class="doc-wrap empty-state"><p>Content not available yet</p></div>`;
   }
