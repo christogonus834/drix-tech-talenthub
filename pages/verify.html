@@ -11,6 +11,8 @@ body{min-height:100vh;display:flex;flex-direction:column;}
 .verify-bg-ov{position:fixed;inset:0;z-index:1;background:rgba(11,12,16,0.88);}
 .verify-main{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;padding:120px 20px 60px;flex-direction:column;}
 .verify-card{width:100%;max-width:560px;}
+#certHost{width:100%;max-width:1000px;margin-top:28px;}
+#certHost:empty{display:none;}
 .result-box{display:none;background:rgba(30,31,41,0.9);backdrop-filter:blur(20px);border:1px solid var(--border2);border-radius:var(--rl);overflow:hidden;margin-top:0;}
 .result-box.show{display:block;}
 .result-head{padding:30px;text-align:center;border-bottom:1px solid var(--border);}
@@ -69,15 +71,19 @@ body{min-height:100vh;display:flex;flex-direction:column;}
       <div class="result-body" id="rBody"></div>
     </div>
   </div>
+  <div id="certHost"></div>
 </div>
 
 <footer style="position:relative;z-index:2;border-top:1px solid var(--border);padding:22px 56px;display:flex;justify-content:space-between;color:var(--muted);font-size:0.78rem;flex-wrap:wrap;gap:12px;">
-  <span>Drix Software Foundation © 2025 · Sponsored by ePayBillz Telecomm</span>
+  <span>Drix Tech Foundation © 2026 · Sponsored by ePayBillz Telecomm</span>
   <a href="/" style="color:var(--muted);">← Back to Home</a>
 </footer>
 
 <script src="/js/app.js"></script>
+<script src="/js/qr.js"></script>
+<script src="/js/certificate.js"></script>
 <script>
+const E=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const params=new URLSearchParams(window.location.search);
 if(params.get('id')){document.getElementById('certInput').value=params.get('id').toUpperCase();verifyCert();}
 
@@ -86,43 +92,41 @@ async function verifyCert(){
   if(!id||id.length<5){showToast('Please enter a valid certificate ID.','error');return;}
   const box=document.getElementById('resultBox');
   box.classList.add('show');
+  document.getElementById('certHost').innerHTML='';
   document.getElementById('rIcon').textContent='⏳';
   document.getElementById('rChip').className='valid-chip';
   document.getElementById('rChip').textContent='Checking...';
   document.getElementById('rMsg').textContent='';
   document.getElementById('rBody').innerHTML='<div style="text-align:center;padding:20px;"><span class="loader"></span></div>';
 
-  const res=await fetch(`/api/certificates/verify/${encodeURIComponent(id)}`).then(r=>r.json()).catch(()=>null);
+  const res=await fetch(`${API_BASE}/api/certificates/verify/${encodeURIComponent(id)}`).then(r=>r.json()).catch(()=>null);
 
   if(res?.valid){
     const c=res.certificate;
+    const branding=await DrixCertificate.loadBranding();
     document.getElementById('rIcon').textContent='✅';
     document.getElementById('rChip').className='valid-chip ok';
     document.getElementById('rChip').textContent='✓ Verified — Authentic Certificate';
-    document.getElementById('rMsg').textContent='This certificate is genuine and was issued by Drix Software Foundation.';
+    document.getElementById('rMsg').textContent='This certificate is genuine and was issued by Drix Tech Foundation.';
     document.getElementById('rBody').innerHTML=`
-      <div class="cert-id-chip">${c.certificate_id}</div>
-      ${[['Fellow Name',c.fellow_name],['Fellow ID',`<span style="font-family:monospace;color:var(--accent2);">${c.fellow_id||'—'}</span>`],['Track Completed',`${c.track_icon||''} ${c.track}`],['Certificate Title',c.title],['Grade',`<span style="color:var(--success);font-weight:700;">${c.grade||'Pass'}</span>`],['State',c.state||'—'],['Date Issued',formatDate(c.issued_at)],['Issued By',c.issued_manually?'Admin (Manual)':'System (Auto-generated)']].map(([l,v])=>`<div class="cf"><span class="cf-label">${l}</span><span class="cf-val">${v}</span></div>`).join('')}
-      <div class="cert-preview">
-        <div class="cert-wm">DRIX</div>
-        ${c.fellow_photo?`<img src="${c.fellow_photo}" class="cert-photo" alt=""/>`:''}
-        <div class="cert-org">Drix Software Foundation</div>
-        <div class="cert-hl">This is to certify that</div>
-        <div class="cert-name">${c.fellow_name}</div>
-        <div class="cert-track-line">has successfully completed the</div>
-        <div class="cert-track">${c.track_icon||''} ${c.track}</div>
-        <div class="cert-div"></div>
-        <div class="cert-grade">🏆 ${c.grade||'Pass'}</div>
-        <div class="cert-footer">Issued ${formatDate(c.issued_at)} · ID: ${c.certificate_id}</div>
-      </div>
-      <div style="margin-top:18px;text-align:center;"><button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ Print / Save PDF</button></div>
+      <div class="cert-id-chip">${E(c.certificate_id)}</div>
+      ${[['Fellow Name',E(c.fellow_name)],['Fellow ID',`<span style="font-family:monospace;color:var(--accent2);">${E(c.fellow_id)||'—'}</span>`],['Track Completed',`${E(c.track_icon)} ${E(c.track)}`],['Certificate Title',E(c.title)],['Grade',`<span style="color:var(--success);font-weight:700;">${E(c.grade)||'Pass'}</span>`],['State',E(c.state)||'—'],['Date Issued',formatDate(c.issued_at)],['Issued By',c.issued_manually?'Admin (Manual)':'System (Auto-generated)']].map(([l,v])=>`<div class="cf"><span class="cf-label">${l}</span><span class="cf-val">${v}</span></div>`).join('')}
     `;
+    document.getElementById('certHost').innerHTML=`
+      <div>${DrixCertificate.render({
+        fellowName:c.fellow_name, photo:c.fellow_photo, trackName:c.track, title:c.title, grade:c.grade, score:c.score,
+        certId:c.certificate_id, issuedAt:c.issued_at,
+        sig1_name:c.sig1_name, sig1_logo:c.sig1_logo, sig2_name:c.sig2_name, sig2_logo:c.sig2_logo, logoUrl:branding.logo
+      })}</div>
+      <div style="margin-top:18px;text-align:center;"><button class="btn btn-outline btn-sm" onclick="DrixCertificate.print(document.querySelector('#certHost .drx-cert-wrap'))">🖨️ Print / Save PDF</button></div>
+    `;
+    DrixCertificate.fit(document.getElementById('certHost'));
   } else {
     document.getElementById('rIcon').textContent='❌';
     document.getElementById('rChip').className='valid-chip fail';
     document.getElementById('rChip').textContent='✗ Invalid Certificate';
     document.getElementById('rMsg').textContent=res?.error||'This ID was not found in our records.';
-    document.getElementById('rBody').innerHTML=`<div style="text-align:center;padding:20px;"><p style="color:var(--muted);font-size:0.86rem;margin-bottom:12px;">The ID <strong style="font-family:monospace;color:var(--danger);">${id}</strong> does not match any certificate.</p><p style="color:var(--muted2);font-size:0.8rem;">Double-check the ID on your hardcopy certificate and try again.</p></div>`;
+    document.getElementById('rBody').innerHTML=`<div style="text-align:center;padding:20px;"><p style="color:var(--muted);font-size:0.86rem;margin-bottom:12px;">The ID <strong style="font-family:monospace;color:var(--danger);">${E(id)}</strong> does not match any certificate.</p><p style="color:var(--muted2);font-size:0.8rem;">Double-check the ID on your hardcopy certificate and try again.</p></div>`;
   }
 }
 document.getElementById('certInput').addEventListener('keypress',e=>{if(e.key==='Enter')verifyCert();});

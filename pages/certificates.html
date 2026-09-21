@@ -30,7 +30,7 @@
 /* Certificate print/preview */
 .cert-preview-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
 .cert-preview-overlay.show{display:flex;}
-.cert-preview-box{background:#0e0f18;border:2px solid rgba(124,110,247,0.35);border-radius:var(--rl);max-width:680px;width:100%;max-height:90vh;overflow-y:auto;padding:48px 40px;text-align:center;position:relative;}
+.cert-preview-box{background:#0e0f18;border:2px solid rgba(124,110,247,0.35);border-radius:var(--rl);max-width:1060px;width:100%;max-height:92vh;overflow-y:auto;padding:44px 22px 24px;text-align:center;position:relative;}
 .cp-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;}
 .cp-inner-border{border:1px solid rgba(255,255,255,0.05);border-radius:14px;padding:36px;position:relative;}
 .cp-wm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-25deg);font-size:6rem;opacity:0.025;font-weight:900;pointer-events:none;}
@@ -47,12 +47,6 @@
 .cp-sig{border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;}
 .cp-sig-logo{width:48px;height:30px;object-fit:contain;margin:0 auto 6px;display:block;opacity:0.8;}
 .cp-sig-name{font-size:0.68rem;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;}
-
-@media print {
-  .sidebar, .main-content > *:not(#printTarget), header, .cert-actions, .cp-close { display:none !important; }
-  .cert-preview-overlay { position:static; background:white; padding:0; display:block; }
-  .cert-preview-box { border:none; max-height:none; background:white; color:black; }
-}
 </style>
 </head>
 <body>
@@ -94,19 +88,19 @@
 <div class="cert-preview-overlay" id="certPreviewOverlay">
   <div class="cert-preview-box" id="certPreviewBox">
     <button class="cp-close" onclick="closePreview()">✕</button>
-    <div class="cp-inner-border">
-      <div class="cp-wm">DRIX</div>
-      <div id="cpContent"></div>
-    </div>
-    <div style="display:flex;gap:10px;justify-content:center;margin-top:24px;">
-      <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    <div id="cpContent"></div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="printCert()">🖨️ Print / Save as PDF</button>
       <button class="btn btn-outline" onclick="closePreview()">Close</button>
     </div>
+    <p style="font-size:0.72rem;color:var(--muted);margin-top:12px;">Tip: in the print window choose “Save as PDF”, paper size A4, landscape, and turn on “Background graphics”.</p>
   </div>
 </div>
 
 <script src="/js/app.js"></script>
 <script src="/js/mobile.js"></script>
+<script src="/js/qr.js"></script>
+<script src="/js/certificate.js"></script>
 <script>
 // ── FELLOW TOKEN GUARD ────────────────────────────────────────────
 if (!localStorage.getItem('drix_token')) {
@@ -185,40 +179,36 @@ async function loadCertificates() {
 }
 
 async function previewCert(certId, autoDownload = false) {
-  const me = await api.get('/api/fellows/me');
-  const data = await api.get('/api/certificates/my');
+  const [me, data, branding] = await Promise.all([
+    api.get('/api/fellows/me'),
+    api.get('/api/certificates/my'),
+    DrixCertificate.loadBranding()
+  ]);
   const cert = data?.certificates?.find(c => c.id === certId);
   if (!cert) return;
-
   const fellow = me?.fellow;
-  const sig1Logo = certMeta.sig1_logo ? `<img src="${certMeta.sig1_logo}" class="cp-sig-logo" alt=""/>` : '';
-  const sig2Logo = certMeta.sig2_logo ? `<img src="${certMeta.sig2_logo}" class="cp-sig-logo" alt=""/>` : '';
 
-  document.getElementById('cpContent').innerHTML = `
-    <div class="cp-org">Drix Software Foundation</div>
-    ${fellow?.profile_photo ? `<img src="${fellow.profile_photo}" class="cp-photo" alt=""/>` : ''}
-    <div class="cp-hl">This is to certify that</div>
-    <div class="cp-name">${fellow?.full_name || '—'}</div>
-    <div class="cp-track-line">has successfully completed the</div>
-    <div class="cp-track">${cert.tracks?.icon || ''} ${cert.tracks?.name || '—'}</div>
-    <div class="cp-div"></div>
-    <div class="cp-grade">🏆 ${cert.grade || 'Pass'}</div>
-    <span class="cp-id">Certificate ID: ${cert.certificate_id} · Issued ${formatDate(cert.issued_at)}</span>
-    <div class="cp-div"></div>
-    <div class="cp-sigs">
-      <div class="cp-sig">
-        ${sig1Logo}
-        <div class="cp-sig-name">${certMeta.sig1_name || 'Drix Tech Foundation Management'}</div>
-      </div>
-      <div class="cp-sig">
-        ${sig2Logo}
-        <div class="cp-sig-name">${certMeta.sig2_name || 'ePayBillz Management'}</div>
-      </div>
-    </div>
-  `;
+  document.getElementById('cpContent').innerHTML = DrixCertificate.render({
+    fellowName: fellow?.full_name,
+    photo: cert.fellow_photo || fellow?.profile_photo,
+    trackName: cert.tracks?.name,
+    title: cert.title,
+    grade: cert.grade,
+    score: cert.score,
+    certId: cert.certificate_id,
+    issuedAt: cert.issued_at,
+    sig1_name: certMeta.sig1_name, sig1_logo: certMeta.sig1_logo,
+    sig2_name: certMeta.sig2_name, sig2_logo: certMeta.sig2_logo,
+    logoUrl: branding.logo
+  });
 
   document.getElementById('certPreviewOverlay').classList.add('show');
-  if (autoDownload) setTimeout(() => window.print(), 400);
+  DrixCertificate.fit(document.getElementById('cpContent'));
+  if (autoDownload) setTimeout(printCert, 300);
+}
+
+function printCert() {
+  DrixCertificate.print(document.querySelector('#cpContent .drx-cert-wrap'));
 }
 
 function closePreview() {
