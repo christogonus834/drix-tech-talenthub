@@ -15,6 +15,27 @@
 .notif-dot.read{background:var(--surface3);border:1px solid var(--border2);}
 .cert-cta{background:linear-gradient(135deg,rgba(6,214,160,0.08),rgba(6,214,160,0.02));border:1px solid rgba(6,214,160,0.2);border-radius:var(--rl);padding:20px 24px;display:none;align-items:center;gap:16px;margin-top:20px;}
 .cert-cta.show{display:flex;}
+.next-card{background:linear-gradient(135deg,rgba(124,110,247,0.1),rgba(124,110,247,0.02));border:1px solid rgba(124,110,247,0.25);border-radius:var(--rxl);padding:22px 26px;margin-bottom:24px;display:flex;align-items:center;gap:18px;}
+.next-card .nc-icon{width:44px;height:44px;border-radius:12px;background:rgba(124,110,247,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--brand-primary);}
+.next-card .nc-label{font-size:0.68rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--brand-secondary);margin-bottom:3px;}
+.next-card .nc-title{font-size:1rem;font-weight:700;}
+.next-card .nc-sub{font-size:0.78rem;color:var(--muted);margin-top:2px;}
+.next-card .nc-deadline{font-size:0.72rem;color:#FBBF24;margin-top:4px;font-weight:600;}
+.next-card .nc-deadline.overdue{color:#F87171;}
+.next-card.caught-up{border-color:rgba(6,214,160,0.25);background:linear-gradient(135deg,rgba(6,214,160,0.08),rgba(6,214,160,0.02));}
+.next-card.caught-up .nc-icon{background:rgba(6,214,160,0.15);color:var(--brand-accent);}
+.fb-band{border-radius:var(--r);padding:2px 8px;font-size:0.66rem;font-weight:700;display:inline-block;}
+.fb-band.good{background:rgba(6,214,160,0.12);color:#06D6A0;}
+.fb-band.mid{background:rgba(124,110,247,0.12);color:var(--brand-secondary);}
+.fb-band.low{background:rgba(251,191,36,0.12);color:#FBBF24;}
+.ann-item{border-bottom:1px solid var(--border);padding:12px 0;}
+.ann-item:last-child{border-bottom:none;}
+.ann-item summary{cursor:pointer;font-weight:700;font-size:0.86rem;list-style:none;display:flex;align-items:center;gap:8px;}
+.ann-item summary::-webkit-details-marker{display:none;}
+.ann-item summary::before{content:'▸';color:var(--muted);transition:transform .15s;}
+.ann-item[open] summary::before{transform:rotate(90deg);}
+.ann-item .ann-body{font-size:0.8rem;color:var(--muted);margin-top:8px;padding-left:16px;white-space:pre-wrap;line-height:1.5;}
+.ann-item .ann-date{font-size:0.68rem;color:var(--muted2);margin-left:auto;font-weight:500;}
 </style>
 </head>
 <body>
@@ -30,6 +51,7 @@
     <div class="sidebar-section-label">Account</div>
     <a href="/dashboard/certificates" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></span>Certificates</a>
     <a href="/dashboard/messages" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>Messages</a>
+    <a href="/dashboard/profile" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>My Profile</a>
   </nav>
   <div class="sidebar-bottom">
     <button onclick="logout()" class="btn btn-outline w-full btn-sm" style="gap:8px;">
@@ -55,6 +77,9 @@
       <div style="margin-top:8px;font-size:0.82rem;color:var(--muted);"><span style="color:var(--brand-warning);font-weight:700;" id="pointsEl">0</span> points earned</div>
     </div>
   </div>
+
+  <!-- DO THIS NEXT -->
+  <div class="next-card" id="nextCard" style="display:none;"></div>
 
   <!-- QUICK ACTIONS -->
   <div class="grid-4 mb-6">
@@ -113,6 +138,20 @@
       <div id="notifList"><div class="flex-center" style="padding:20px;"><span class="loader"></span></div></div>
     </div>
   </div>
+
+  <div class="grid-2 mt-6">
+    <!-- LATEST FEEDBACK -->
+    <div class="card" id="feedbackCard" style="display:none;">
+      <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:12px;">Latest Feedback</h3>
+      <div id="feedbackBody"></div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    <div class="card">
+      <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:8px;">Announcements</h3>
+      <div id="annList"><p style="font-size:0.8rem;color:var(--muted);">Loading…</p></div>
+    </div>
+  </div>
 </main>
 </div>
 
@@ -121,8 +160,47 @@
 <script>
 if (!auth.getToken()) window.location.href = '/login';
 
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderNextAction(next) {
+  const card = document.getElementById('nextCard');
+  if (!next) { card.style.display = 'none'; return; }
+  card.style.display = 'flex';
+  const icons = {
+    assignment: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+    lesson: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+    resubmit: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
+    exam: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+    certificate: '<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>',
+    caught_up: '<polyline points="20 6 9 17 4 12"/>',
+  };
+  card.className = 'next-card' + (next.type === 'caught_up' ? ' caught-up' : '');
+  let deadlineHtml = '';
+  if (next.deadline) {
+    const overdue = new Date(next.deadline) < new Date();
+    deadlineHtml = `<div class="nc-deadline ${overdue ? 'overdue' : ''}">${overdue ? 'Overdue — was due' : 'Due'} ${formatDate(next.deadline)}</div>`;
+  } else if (next.type === 'caught_up' && next.next_unlock_at) {
+    deadlineHtml = `<div class="nc-deadline">Next module unlocks ${formatDate(next.next_unlock_at)}</div>`;
+  }
+  card.innerHTML = `
+    <div class="nc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icons[next.type] || icons.lesson}</svg></div>
+    <div style="flex:1;">
+      <div class="nc-label">${next.type === 'caught_up' ? "You're all caught up" : 'Do this next'}</div>
+      <div class="nc-title">${esc(next.title)}</div>
+      ${next.subtitle ? `<div class="nc-sub">${esc(next.subtitle)}</div>` : ''}
+      ${deadlineHtml}
+    </div>
+    ${next.action_url ? `<a href="${esc(next.action_url)}" class="btn btn-primary btn-sm">${esc(next.action_label || 'Go')}</a>` : ''}
+  `;
+}
+
 async function loadDashboard() {
-  const data = await api.get('/api/fellows/me');
+  const [data, summary, next, ann] = await Promise.all([
+    api.get('/api/fellows/me'),
+    api.get('/api/fellows/dashboard-summary'),
+    api.get('/api/fellows/next-action'),
+    api.get('/api/announcements/my'),
+  ]);
   if (!data) return;
   const { fellow, notifications } = data;
 
@@ -138,38 +216,78 @@ async function loadDashboard() {
   document.getElementById('pointsEl').textContent = (fellow.points || 0).toLocaleString();
   document.getElementById('statPoints').textContent = (fellow.points || 0).toLocaleString();
 
-  // Progress
-  const courses = await api.get('/api/fellows/courses');
-  if (courses?.length) {
-    const done = courses.filter(c => c.progress?.completed).length;
-    const pct = Math.round((done / courses.length) * 100);
-    document.getElementById('statTotal').textContent = courses.length;
-    document.getElementById('statDone').textContent = done;
-    document.getElementById('statProgress').textContent = pct + '%';
-    document.getElementById('progressBar').style.width = pct + '%';
-    document.getElementById('progressLabel').textContent = pct + '%';
+  // Progress (real lesson completion from modules/lessons)
+  const p = summary?.progress;
+  if (p && p.total > 0) {
+    document.getElementById('statTotal').textContent = p.total;
+    document.getElementById('statDone').textContent = p.done;
+    document.getElementById('statProgress').textContent = p.percent + '%';
+    document.getElementById('progressBar').style.width = p.percent + '%';
+    document.getElementById('progressLabel').textContent = p.percent + '%';
 
-    document.getElementById('recentLessons').innerHTML = courses.slice(0,3).map(c => `
+    document.getElementById('recentLessons').innerHTML = (p.recent || []).map(l => `
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
-        <span class="icon-sm" style="color:${c.progress?.completed?'var(--brand-accent)':'var(--muted)'}">
-          ${c.progress?.completed
+        <span class="icon-sm" style="color:${l.done?'var(--brand-accent)':'var(--muted)'}">
+          ${l.done
             ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
             : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>'}
         </span>
-        <div style="flex:1;font-size:0.82rem;font-weight:500;">${c.title}</div>
-        <span style="font-size:0.7rem;color:var(--muted);">${c.duration_minutes}m</span>
-      </div>`).join('');
-
-    if (pct === 100) {
-      document.getElementById('certCta').classList.add('show');
-      checkCertStatus();
-    }
+        <div style="flex:1;font-size:0.82rem;font-weight:500;">${esc(l.title)}</div>
+        <span style="font-size:0.7rem;color:var(--muted);">${esc(l.module)}</span>
+      </div>`).join('') || '<p style="font-size:0.8rem;color:var(--muted);margin-top:8px;">No lessons in your open modules yet.</p>';
   } else {
     document.getElementById('statTotal').textContent = '0';
     document.getElementById('statDone').textContent = '0';
     document.getElementById('statProgress').textContent = '0%';
     document.getElementById('recentLessons').innerHTML = '<p style="font-size:0.8rem;color:var(--muted);margin-top:8px;">No lessons available yet</p>';
   }
+
+  // Certificate CTA — driven by real eligibility (lessons + exam), not just 100% of a legacy list
+  const el = summary?.eligibility;
+  if (el) {
+    const cta = document.getElementById('certCta');
+    if (el.has_certificate) {
+      cta.classList.add('show');
+      cta.querySelector('.nc-title, div div').textContent = 'Your certificate has been issued!';
+      document.getElementById('certBtn').textContent = 'View Certificate';
+      document.getElementById('certBtn').onclick = () => window.location.href='/dashboard/certificates';
+    } else if (el.has_pending_request) {
+      cta.classList.add('show');
+      document.getElementById('certBtn').textContent = 'Pending Review';
+      document.getElementById('certBtn').disabled = true;
+    } else if (el.eligible) {
+      cta.classList.add('show');
+    }
+  }
+
+  // Do This Next
+  renderNextAction(next);
+
+  // Latest Feedback
+  const fb = summary?.latest_feedback;
+  if (fb) {
+    document.getElementById('feedbackCard').style.display = '';
+    const pct = fb.max_score ? Math.round((fb.grade / fb.max_score) * 100) : null;
+    const band = pct == null ? 'mid' : pct >= 80 ? 'good' : pct >= 60 ? 'mid' : 'low';
+    document.getElementById('feedbackBody').innerHTML = `
+      <div style="font-weight:700;font-size:0.88rem;">${esc(fb.assignment_title)}</div>
+      <div style="margin:8px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        ${fb.grade != null ? `<span class="fb-band ${band}">${fb.grade}/${fb.max_score}</span>` : ''}
+        <span class="badge ${fb.approved ? 'badge-approved' : 'badge-pending'}">${fb.approved ? 'Approved' : 'Needs revision'}</span>
+      </div>
+      <div style="font-size:0.8rem;color:var(--muted);line-height:1.55;">${fb.feedback ? esc(fb.feedback) : 'No written feedback was added.'}</div>
+      <a href="${esc(fb.action_url)}" class="btn btn-outline btn-sm" style="margin-top:12px;">Open assignment</a>`;
+  }
+
+  // Announcements
+  const list = document.getElementById('annList');
+  list.innerHTML = (ann && ann.length)
+    ? ann.map(a => `
+      <details class="ann-item">
+        <summary><span>📢 ${esc(a.title)}</span><span class="ann-date">${formatDate(a.created_at)}</span></summary>
+        <div class="ann-body">${esc(a.content || '')}</div>
+      </details>`).join('')
+    : '<p style="font-size:0.8rem;color:var(--muted);">No announcements yet.</p>';
 
   // Notifications
   const unread = (notifications || []).filter(n => !n.is_read).length;

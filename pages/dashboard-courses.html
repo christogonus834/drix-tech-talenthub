@@ -11,6 +11,15 @@
 .video-wrap video{position:absolute;inset:0;width:100%;height:100%;}
 .pdf-wrap{width:100%;height:600px;border:none;}
 .doc-wrap{padding:24px;font-size:0.9rem;line-height:1.8;color:var(--text2);}
+.module-block.locked{opacity:0.62;}
+.module-block.locked .module-header{cursor:not-allowed;}
+.lock-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.64rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:rgba(244,63,94,0.1);color:#F87171;border:1px solid rgba(244,63,94,0.2);border-radius:50px;padding:2px 9px;margin-left:8px;}
+.module-deadline{font-size:0.68rem;color:#FBBF24;margin-top:3px;}
+.assign-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--border);}
+.assign-row .badge{flex-shrink:0;}
+.submit-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;}
+.submit-overlay.show{display:flex;}
+.submit-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rxl);max-width:520px;width:100%;padding:26px;}
 </style>
 </head>
 <body>
@@ -26,6 +35,7 @@
     <div class="sidebar-section-label">Account</div>
     <a href="/dashboard/certificates" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></span>Certificates</a>
     <a href="/dashboard/messages" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>Messages</a>
+    <a href="/dashboard/profile" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>My Profile</a>
   </nav>
   <div class="sidebar-bottom"><button onclick="logout()" class="btn btn-outline w-full btn-sm">Sign Out</button></div>
 </aside>
@@ -84,6 +94,27 @@
     </div>
   </div>
 </main>
+
+<div class="submit-overlay" id="submitOverlay">
+  <div class="submit-box">
+    <div class="flex-between mb-4">
+      <h3 style="font-size:1rem;font-weight:700;" id="submitTitle">Submit assignment</h3>
+      <button class="btn btn-outline btn-sm" onclick="closeSubmit()">✕</button>
+    </div>
+    <div id="submitFeedbackBox"></div>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:14px;" id="submitInstructions"></p>
+    <div class="form-group">
+      <label class="form-label">Your answer</label>
+      <textarea class="form-input" id="submitContent" rows="5" placeholder="Write your answer here…"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Or a link to your work (optional)</label>
+      <input class="form-input" id="submitFileUrl" placeholder="https://…"/>
+    </div>
+    <div id="submitAlert" class="alert alert-error"></div>
+    <button class="btn btn-primary w-full" id="submitBtn" onclick="doSubmitAssignment()">Submit</button>
+  </div>
+</div>
 </div>
 
 <script src="/js/app.js"></script>
@@ -107,12 +138,13 @@ async function loadCourses() {
   }
 
   const modules = await api.get(`/api/modules/track/${fellowTrackId}`);
+  window.allModules = modules || [];
   if (!modules?.length) {
     document.getElementById('modulesList').innerHTML = '<div class="card empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><h3>No content yet</h3><p>Your admin has not added lessons yet. Check back soon.</p></div>';
     return;
   }
 
-  // Count totals
+  // Count totals — locked modules return no lessons, so they don't skew progress
   let totalLessons = 0, doneLessons = 0;
   modules.forEach(m => {
     totalLessons += (m.lessons||[]).length;
@@ -121,22 +153,36 @@ async function loadCourses() {
   const pct = totalLessons > 0 ? Math.round((doneLessons/totalLessons)*100) : 0;
   document.getElementById('overallProgress').textContent = `${pct}% complete`;
 
+  function fmtUnlock(iso) {
+    if (!iso) return '';
+    const d = new Date(iso), diff = d - new Date();
+    if (diff > 0 && diff < 6*86400000) {
+      const days = Math.ceil(diff/86400000);
+      return `Unlocks in ${days} day${days===1?'':'s'}`;
+    }
+    return `Unlocks ${d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}`;
+  }
+
   document.getElementById('modulesList').innerHTML = modules.map((m, i) => `
-    <div class="module-block animate-fade" style="animation-delay:${i*0.06}s;">
-      <div class="module-header" onclick="toggleModule('mod-${m.id}')">
+    <div class="module-block animate-fade ${m.is_locked?'locked':''}" style="animation-delay:${i*0.06}s;">
+      <div class="module-header" onclick="${m.is_locked?'':`toggleModule('mod-${m.id}')`}">
         <div class="module-num">${i+1}</div>
         <div style="flex:1;">
-          <div style="font-weight:700;font-size:0.9rem;">${m.title}</div>
+          <div style="font-weight:700;font-size:0.9rem;">${m.title}${m.is_locked ? `<span class="lock-badge">🔒 Locked</span>` : ''}</div>
           ${m.description ? `<div style="font-size:0.74rem;color:var(--muted);margin-top:2px;">${m.description}</div>` : ''}
-          <div style="margin-top:6px;">
-            <div class="progress-bar" style="width:160px;display:inline-block;">
-              <div class="progress-fill" style="width:${calcModuleProgress(m)}%"></div>
-            </div>
-            <span style="font-size:0.68rem;color:var(--muted);margin-left:8px;">${calcModuleProgress(m)}%</span>
-          </div>
+          ${m.is_locked
+            ? `<div class="module-deadline">${m.lock_reason === 'admin' ? 'Locked by admin' : fmtUnlock(m.unlocks_at)}</div>`
+            : `<div style="margin-top:6px;">
+                <div class="progress-bar" style="width:160px;display:inline-block;">
+                  <div class="progress-fill" style="width:${calcModuleProgress(m)}%"></div>
+                </div>
+                <span style="font-size:0.68rem;color:var(--muted);margin-left:8px;">${calcModuleProgress(m)}%</span>
+                ${m.deadline_at ? `<span class="module-deadline" style="margin-left:10px;display:inline;">Deadline: ${new Date(m.deadline_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>` : ''}
+              </div>`}
         </div>
-        <span class="icon-sm" style="color:var(--muted);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        ${m.is_locked ? '' : `<span class="icon-sm" style="color:var(--muted);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>`}
       </div>
+      ${m.is_locked ? '' : `
       <div id="mod-${m.id}" class="module-lessons" style="display:none;">
         ${(m.lessons||[]).map(l => {
           const done = l.fellow_lesson_progress?.some(p => p.completed);
@@ -161,8 +207,34 @@ async function loadCourses() {
                 : `<span class="badge badge-info" style="font-size:0.66rem;">Start</span>`}
             </div>`;
         }).join('')}
-      </div>
+        ${(m.assignments||[]).map(a => {
+          const sub = a.my_submission;
+          const status = sub ? sub.status : 'not_submitted';
+          const badge = { graded: '<span class="badge badge-approved">Approved</span>', returned: '<span class="badge badge-danger">Needs revision</span>', submitted: '<span class="badge badge-pending">Submitted</span>', not_submitted: '<span class="badge badge-info">Assignment</span>' }[status];
+          const overdue = a.deadline_at && new Date(a.deadline_at) < new Date() && status !== 'graded';
+          return `
+            <div class="assign-row" id="assign-${a.id}">
+              ${badge}
+              <div style="flex:1;">
+                <div style="font-size:0.84rem;font-weight:600;">${a.title}</div>
+                <div style="font-size:0.7rem;color:${overdue?'#F87171':'var(--muted)'};">${a.deadline_at ? (overdue?'Overdue — was due ':'Due ') + new Date(a.deadline_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : 'No deadline'}${sub && sub.grade!=null ? ` · ${sub.grade}/${a.max_score}` : ''}</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openAssignment('${a.id}')">${status==='not_submitted'?'Submit':status==='returned'?'Resubmit':'View'}</button>
+            </div>`;
+        }).join('')}
+      </div>`}
     </div>`).join('');
+
+  // If we arrived via a "Do This Next" / feedback link, jump straight to it
+  const qp = new URLSearchParams(location.search);
+  if (qp.get('lesson')) {
+    const l = modules.flatMap(m => m.lessons||[]).find(x => x.id === qp.get('lesson'));
+    const mod = modules.find(m => (m.lessons||[]).some(x => x.id === qp.get('lesson')));
+    if (l && mod) { toggleModule('mod-'+mod.id); openLesson(l.id, l.title, mod.title, l.type, l.content_url||'', l.content_text||''); }
+  } else if (qp.get('module')) {
+    toggleModule('mod-'+qp.get('module'));
+    if (qp.get('assignment')) setTimeout(() => { openAssignment(qp.get('assignment')); document.getElementById('assign-'+qp.get('assignment'))?.scrollIntoView({behavior:'smooth',block:'center'}); }, 200);
+  }
 }
 
 function calcModuleProgress(m) {
@@ -249,6 +321,56 @@ async function markComplete() {
 
 function askAI() {
   sendAIMessage('aiInput', 'aiMessages', currentLessonContext);
+}
+
+let currentAssignment = null;
+
+function openAssignment(assignmentId) {
+  const mod = (window.allModules||[]).find(m => (m.assignments||[]).some(a => a.id === assignmentId));
+  const a = mod?.assignments.find(x => x.id === assignmentId);
+  if (!a) return;
+  currentAssignment = a;
+  document.getElementById('submitTitle').textContent = a.title;
+  document.getElementById('submitInstructions').textContent = a.instructions || a.description || '';
+  document.getElementById('submitAlert').classList.remove('show');
+  const sub = a.my_submission;
+  const box = document.getElementById('submitFeedbackBox');
+  if (sub && (sub.status === 'graded' || sub.status === 'returned')) {
+    box.innerHTML = `<div class="alert ${sub.status==='graded'?'alert-success':'alert-info'} show">
+      <strong>${sub.status==='graded'?'Approved':'Needs revision'}${sub.grade!=null?` — ${sub.grade}/${a.max_score}`:''}</strong>
+      ${sub.feedback ? `<div style="margin-top:4px;">${sub.feedback}</div>` : ''}
+    </div>`;
+  } else { box.innerHTML = ''; }
+  document.getElementById('submitContent').value = sub?.content || '';
+  document.getElementById('submitFileUrl').value = sub?.file_url || '';
+  const btn = document.getElementById('submitBtn');
+  if (sub?.status === 'graded') { btn.disabled = true; btn.textContent = 'Already approved'; }
+  else { btn.disabled = false; btn.textContent = sub ? 'Resubmit' : 'Submit'; }
+  document.getElementById('submitOverlay').classList.add('show');
+}
+
+function closeSubmit() {
+  document.getElementById('submitOverlay').classList.remove('show');
+  currentAssignment = null;
+}
+
+async function doSubmitAssignment() {
+  if (!currentAssignment) return;
+  const content = document.getElementById('submitContent').value.trim();
+  const file_url = document.getElementById('submitFileUrl').value.trim();
+  const alertBox = document.getElementById('submitAlert');
+  if (!content && !file_url) { alertBox.textContent = 'Add your answer or a link to your work.'; alertBox.classList.add('show'); return; }
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="loader"></span>';
+  const r = await api.post(`/api/modules/${currentAssignment.id}/submit`, { content, file_url });
+  if (r?.success) {
+    showToast('Assignment submitted!', 'success');
+    closeSubmit();
+    loadCourses();
+  } else {
+    alertBox.textContent = r?.error || 'Failed to submit.'; alertBox.classList.add('show');
+    btn.disabled = false; btn.textContent = 'Submit';
+  }
 }
 
 loadCourses();

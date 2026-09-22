@@ -30,6 +30,8 @@
     <div class="sidebar-section-label">Content</div>
     <a href="/admin/courses" class="sidebar-link active"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Tracks & Modules</a>
     <a href="/admin/cohorts" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Cohorts</a>
+    <a href="/admin/announcements" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></span>Announcements</a>
+    <a href="/admin/submissions" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>Submissions</a>
     <a href="/admin/certificates" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></span>Certificates</a>
     <a href="/admin/messages" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>Messages</a>
     <div class="sidebar-section-label">System</div>
@@ -92,13 +94,19 @@
 <!-- ADD MODULE MODAL -->
 <div class="modal-overlay" id="addModuleModal">
   <div class="modal" style="max-width:460px;">
-    <div class="modal-header"><div class="modal-title">Add Module</div><button class="modal-close" onclick="closeModal('addModuleModal')">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="moduleModalTitle">Add Module</div><button class="modal-close" onclick="closeModal('addModuleModal')">✕</button></div>
     <input type="hidden" id="moduleTrackId"/>
+    <input type="hidden" id="moduleEditId"/>
     <div class="form-group"><label class="form-label">Module Title *</label><input type="text" class="form-control" id="moduleTitle" placeholder="e.g. Introduction to Cybersecurity"/></div>
     <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="moduleDesc" rows="3" placeholder="What students will learn..."></textarea></div>
     <div class="form-group"><label class="form-label">Order Number</label><input type="number" class="form-control" id="moduleOrder" value="1" min="1"/></div>
+    <div style="display:flex;gap:10px;">
+      <div class="form-group" style="flex:1;"><label class="form-label">Unlocks at</label><input type="datetime-local" class="form-control" id="moduleUnlockAt"/></div>
+      <div class="form-group" style="flex:1;"><label class="form-label">Deadline</label><input type="datetime-local" class="form-control" id="moduleDeadlineAt"/></div>
+    </div>
+    <p style="font-size:0.7rem;color:var(--muted);margin-top:-8px;margin-bottom:14px;">Leave "Unlocks at" empty for the module to be open immediately. It opens automatically once the date passes — no action needed.</p>
     <div style="display:flex;gap:10px;margin-top:8px;">
-      <button class="btn btn-primary" onclick="saveModule()">Add Module</button>
+      <button class="btn btn-primary" id="saveModuleBtn" onclick="saveModule()">Add Module</button>
       <button class="btn btn-outline" onclick="closeModal('addModuleModal')">Cancel</button>
     </div>
   </div>
@@ -264,6 +272,7 @@ async function loadModules(trackId, trackName) {
   area.innerHTML = '<div class="flex-center" style="padding:40px;"><span class="loader"></span></div>';
   const modules = await api.get(`/api/modules/admin/track/${trackId}`, true);
 
+  window.currentModules = modules || [];
   area.innerHTML = `
     <div class="flex-between mb-4" style="flex-wrap:wrap;gap:8px;">
       <h2 style="font-size:1rem;font-weight:700;">${trackName}</h2>
@@ -273,6 +282,15 @@ async function loadModules(trackId, trackName) {
       </div>
     </div>
     <div id="modulesList">${renderModules(modules || [])}</div>`;
+}
+
+function moduleStateLabel(m) {
+  if (m.manual_lock) return { text: 'Locked by admin', cls: 'badge-danger' };
+  if (m.unlock_at && new Date(m.unlock_at) > new Date()) {
+    const days = Math.ceil((new Date(m.unlock_at) - new Date()) / 86400000);
+    return { text: `Unlocks in ${days} day${days===1?'':'s'}`, cls: 'badge-pending' };
+  }
+  return { text: 'Open', cls: 'badge-approved' };
 }
 
 function renderModules(modules) {
@@ -291,7 +309,10 @@ function renderModules(modules) {
           ${m.description ? `<div style="font-size:0.72rem;color:var(--muted);margin-top:1px;">${m.description}</div>` : ''}
           <div style="font-size:0.68rem;color:var(--muted2);margin-top:3px;">${(m.lessons||[]).length} lessons · ${(m.assignments||[]).length} assignments</div>
         </div>
-        <div style="display:flex;gap:5px;flex-shrink:0;">
+        <div style="display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;">
+          <span class="badge ${moduleStateLabel(m).cls}" style="align-self:center;">${moduleStateLabel(m).text}</span>
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openEditModule('${m.id}')">Edit</button>
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();toggleModuleLock('${m.id}', ${!m.manual_lock})">${m.manual_lock ? 'Unlock' : 'Force Lock'}</button>
           <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openAddLesson('${m.id}')">+ Lesson</button>
           <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openAddAssignment('${m.id}')">+ Assignment</button>
           <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteModule('${m.id}')">
@@ -414,11 +435,44 @@ function onLessonTypeChange() {
 // ── OPEN MODALS ───────────────────────────────────────────────────────
 function openAddModule() {
   if (!selectedTrackId) return showToast('Select a track first', 'error');
+  document.getElementById('moduleModalTitle').textContent = 'Add Module';
+  document.getElementById('saveModuleBtn').textContent = 'Add Module';
+  document.getElementById('moduleEditId').value = '';
   document.getElementById('moduleTrackId').value = selectedTrackId;
   document.getElementById('moduleTitle').value = '';
   document.getElementById('moduleDesc').value = '';
   document.getElementById('moduleOrder').value = '1';
+  document.getElementById('moduleUnlockAt').value = '';
+  document.getElementById('moduleDeadlineAt').value = '';
   openModal('addModuleModal');
+}
+
+function toLocalInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function openEditModule(id) {
+  const m = (window.currentModules||[]).find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('moduleModalTitle').textContent = 'Edit Module';
+  document.getElementById('saveModuleBtn').textContent = 'Save Changes';
+  document.getElementById('moduleEditId').value = m.id;
+  document.getElementById('moduleTrackId').value = selectedTrackId;
+  document.getElementById('moduleTitle').value = m.title || '';
+  document.getElementById('moduleDesc').value = m.description || '';
+  document.getElementById('moduleOrder').value = m.order_index || 1;
+  document.getElementById('moduleUnlockAt').value = toLocalInput(m.unlock_at);
+  document.getElementById('moduleDeadlineAt').value = toLocalInput(m.deadline_at);
+  openModal('addModuleModal');
+}
+
+async function toggleModuleLock(id, locked) {
+  const r = await api.post(`/api/modules/admin/module/${id}/lock`, { locked }, true);
+  if (r?.success) selectTrack(selectedTrackId, selectedTrackName);
+  else showToast(r?.error || 'Failed to update lock', 'error');
 }
 function openAddLesson(moduleId) {
   document.getElementById('lessonModuleId').value = moduleId;
@@ -447,13 +501,24 @@ function openAddAssignment(moduleId) {
 async function saveModule() {
   const title = document.getElementById('moduleTitle').value.trim();
   if (!title) return showToast('Title required', 'error');
-  const r = await api.post('/api/modules/admin/module', {
+  const unlockLocal = document.getElementById('moduleUnlockAt').value;
+  const deadlineLocal = document.getElementById('moduleDeadlineAt').value;
+  const payload = {
     track_id: document.getElementById('moduleTrackId').value,
     title,
     description: document.getElementById('moduleDesc').value,
-    order_index: parseInt(document.getElementById('moduleOrder').value) || 0
-  }, true);
-  if (r?.success) { showToast('Module added!', 'success'); closeModal('addModuleModal'); selectTrack(selectedTrackId, selectedTrackName); }
+    order_index: parseInt(document.getElementById('moduleOrder').value) || 0,
+    unlock_at: unlockLocal ? new Date(unlockLocal).toISOString() : null,
+    deadline_at: deadlineLocal ? new Date(deadlineLocal).toISOString() : null,
+  };
+  if (payload.unlock_at && payload.deadline_at && new Date(payload.deadline_at) <= new Date(payload.unlock_at)) {
+    return showToast('Deadline must be after the unlock date.', 'error');
+  }
+  const editId = document.getElementById('moduleEditId').value;
+  const r = editId
+    ? await api.patch(`/api/modules/admin/module/${editId}`, payload, true)
+    : await api.post('/api/modules/admin/module', payload, true);
+  if (r?.success) { showToast(editId ? 'Module updated!' : 'Module added!', 'success'); closeModal('addModuleModal'); selectTrack(selectedTrackId, selectedTrackName); }
   else showToast(r?.error || 'Failed — check Render logs', 'error');
 }
 
