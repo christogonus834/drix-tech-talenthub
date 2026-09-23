@@ -139,6 +139,11 @@ document.querySelectorAll('.sidebar-link').forEach(link => {
 });
 
 // ─── AI ASSISTANT ─────────────────────────────────────────────────────
+// Talks to OUR backend (/api/ai/chat), which holds the Gemini key server-side
+// and handles model rotation, quota cooldowns, caching and per-fellow throttling.
+// (Two stale client-side implementations — one hitting Anthropic directly, one
+// hitting Gemini with a hardcoded placeholder key — used to live here. The
+// second one silently shadowed the first and always failed with "not configured".)
 async function sendAIMessage(inputId, messagesId, context = '') {
   const input = document.getElementById(inputId);
   const msgs = document.getElementById(messagesId);
@@ -156,23 +161,33 @@ async function sendAIMessage(inputId, messagesId, context = '') {
   msgs.scrollTop = msgs.scrollHeight;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(API_BASE + '/api/ai/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: `You are a helpful learning assistant for the Drix Tech Talent Programme, a Nigerian tech training fellowship. Help students understand their coursework, answer questions about tech topics, and guide their learning journey. Be concise, practical, and encouraging. Context: ${context}`,
-        messages: [{ role: 'user', content: text }]
-      })
+      headers: api._headers(false),
+      body: JSON.stringify({ message: text, context })
     });
-    const data = await response.json();
-    const reply = data.content?.[0]?.text || 'I could not process that. Please try again.';
+    const data = await res.json().catch(() => null);
     document.getElementById(typingId)?.remove();
-    msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble">${reply.replace(/\n/g,'<br>')}</div></div>`;
+
+    if (res.status === 401 || res.status === 403) {
+      auth.clearToken();
+      window.location.href = '/login';
+      return;
+    }
+
+    if (!data || data.error) {
+      const msg = data?.error || 'AI assistant is temporarily unavailable.';
+      msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble" style="color:var(--brand-warning);">${msg}</div></div>`;
+    } else if (data.not_configured) {
+      msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble" style="color:var(--brand-warning);">AI assistant not configured yet. Admin needs to add the Gemini API key.</div></div>`;
+    } else {
+      const reply = data.reply || 'I could not process that. Please try again.';
+      msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble">${reply.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div></div>`;
+    }
   } catch(e) {
     document.getElementById(typingId)?.remove();
     msgs.innerHTML += `<div class="ai-msg assistant"><div class="ai-bubble" style="color:var(--brand-danger)">Connection error. Please try again.</div></div>`;
+    console.error('AI chat error:', e);
   }
   msgs.scrollTop = msgs.scrollHeight;
 }
@@ -197,71 +212,3 @@ function setupFileDrop(dropId, inputId, onFile) {
   });
 }
 
-// ─── GEMINI AI ASSISTANT (replaces Claude) ────────────────────────────
-// Uses Gemini 1.5 Flash — fast and free tier available
-// Get your key at: https://aistudio.google.com/app/apikey
-const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-async function sendAIMessage(inputId, messagesId, context = '') {
-  const input = document.getElementById(inputId);
-  const msgs = document.getElementById(messagesId);
-  const text = input?.value?.trim();
-  if (!text || !msgs) return;
-  input.value = '';
-
-  // User bubble
-  msgs.innerHTML += `<div class="ai-msg user"><div class="ai-bubble">${text}</div></div>`;
-
-  // Typing indicator
-  const typingId = 'typing_' + Date.now();
-  msgs.innerHTML += `
-    <div class="ai-msg assistant" id="${typingId}">
-      <div class="ai-bubble">
-        <div class="ai-typing">
-          <div class="ai-dot"></div>
-          <div class="ai-dot"></div>
-          <div class="ai-dot"></div>
-        </div>
-      </div>
-    </div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-
-  try {
-    const response = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `You are a helpful AI learning assistant for the Drix Tech Talent Programme, a Nigerian tech training fellowship. Help students understand their coursework, answer tech questions, and guide their learning. Be concise, practical and encouraging. Keep answers short and clear.\n\nLesson context: ${context}\n\nStudent question: ${text}`
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 800,
-        }
-      })
-    });
-
-    const data = await response.json();
-    document.getElementById(typingId)?.remove();
-
-    if (data.error) {
-      // If API key not set yet
-      if (data.error.code === 400 || data.error.status === 'INVALID_ARGUMENT') {
-        msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble" style="color:var(--brand-warning);">AI assistant not configured yet. Admin needs to add the Gemini API key.</div></div>`;
-      } else {
-        throw new Error(data.error.message);
-      }
-    } else {
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'I could not process that. Please try again.';
-      msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble">${reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div></div>`;
-    }
-  } catch(e) {
-    document.getElementById(typingId)?.remove();
-    msgs.innerHTML += `<div class="ai-msg assistant"><div class="ai-bubble" style="color:var(--brand-danger);">Connection error. Please try again.</div></div>`;
-    console.error('Gemini error:', e);
-  }
-  msgs.scrollTop = msgs.scrollHeight;
-}
