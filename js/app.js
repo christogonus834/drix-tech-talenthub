@@ -34,68 +34,74 @@ function icon(name, cls = 'icon-md') {
 }
 
 // ─── TOKEN AUTH ───────────────────────────────────────────────────────
+// `role` below is one of: false/undefined (fellow), true (admin, kept for backwards compat), 'mentor'.
 const auth = {
-  getToken()        { return localStorage.getItem('drix_token'); },
-  getAdminToken()   { return localStorage.getItem('drix_admin_token'); },
-  setToken(t)       { localStorage.setItem('drix_token', t); },
-  setAdminToken(t)  { localStorage.setItem('drix_admin_token', t); },
-  clearToken()      { localStorage.removeItem('drix_token'); },
-  clearAdminToken() { localStorage.removeItem('drix_admin_token'); },
+  getToken()         { return localStorage.getItem('drix_token'); },
+  getAdminToken()    { return localStorage.getItem('drix_admin_token'); },
+  getMentorToken()   { return localStorage.getItem('drix_mentor_token'); },
+  setToken(t)        { localStorage.setItem('drix_token', t); },
+  setAdminToken(t)   { localStorage.setItem('drix_admin_token', t); },
+  setMentorToken(t)  { localStorage.setItem('drix_mentor_token', t); },
+  clearToken()       { localStorage.removeItem('drix_token'); },
+  clearAdminToken()  { localStorage.removeItem('drix_admin_token'); },
+  clearMentorToken() { localStorage.removeItem('drix_mentor_token'); },
 };
 
 // ─── API HELPER ───────────────────────────────────────────────────────
 const api = {
-  _headers(isAdmin = false) {
-    const token = isAdmin ? auth.getAdminToken() : auth.getToken();
+  _token(role) { return role === 'mentor' ? auth.getMentorToken() : role ? auth.getAdminToken() : auth.getToken(); },
+  _headers(role = false) {
     const h = { 'Content-Type': 'application/json' };
+    const token = this._token(role);
     if (token) h['Authorization'] = `Bearer ${token}`;
     return h;
   },
-  async _handle(res, isAdmin) {
+  async _handle(res, role) {
     if (res.status === 401 || res.status === 403) {
-      if (isAdmin) { auth.clearAdminToken(); window.location.href = '/admin/login'; }
+      if (role === 'mentor') { auth.clearMentorToken(); window.location.href = '/mentor/login'; }
+      else if (role) { auth.clearAdminToken(); window.location.href = '/admin/login'; }
       else { auth.clearToken(); window.location.href = '/login'; }
       return null;
     }
     return res.json().catch(() => null);
   },
-  async get(url, isAdmin = false) {
+  async get(url, role = false) {
     try {
-      const res = await fetch(API_BASE + url, { headers: this._headers(isAdmin) });
-      return this._handle(res, isAdmin);
+      const res = await fetch(API_BASE + url, { headers: this._headers(role) });
+      return this._handle(res, role);
     } catch(e) { console.error('GET', url, e); return null; }
   },
-  async post(url, data, isAdmin = false) {
+  async post(url, data, role = false) {
     try {
       const res = await fetch(API_BASE + url, {
-        method: 'POST', headers: this._headers(isAdmin), body: JSON.stringify(data)
+        method: 'POST', headers: this._headers(role), body: JSON.stringify(data)
       });
-      return this._handle(res, isAdmin);
+      return this._handle(res, role);
     } catch(e) { console.error('POST', url, e); return null; }
   },
-  async patch(url, data, isAdmin = false) {
+  async patch(url, data, role = false) {
     try {
       const res = await fetch(API_BASE + url, {
-        method: 'PATCH', headers: this._headers(isAdmin), body: JSON.stringify(data)
+        method: 'PATCH', headers: this._headers(role), body: JSON.stringify(data)
       });
-      return this._handle(res, isAdmin);
+      return this._handle(res, role);
     } catch(e) { console.error('PATCH', url, e); return null; }
   },
-  async delete(url, isAdmin = false) {
+  async delete(url, role = false) {
     try {
       const res = await fetch(API_BASE + url, {
-        method: 'DELETE', headers: this._headers(isAdmin)
+        method: 'DELETE', headers: this._headers(role)
       });
-      return this._handle(res, isAdmin);
+      return this._handle(res, role);
     } catch(e) { console.error('DELETE', url, e); return null; }
   },
-  async upload(url, formData, isAdmin = false) {
+  async upload(url, formData, role = false) {
     try {
-      const token = isAdmin ? auth.getAdminToken() : auth.getToken();
+      const token = this._token(role);
       const headers = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
       const res = await fetch(API_BASE + url, { method: 'POST', headers, body: formData });
-      return this._handle(res, isAdmin);
+      return this._handle(res, role);
     } catch(e) { console.error('UPLOAD', url, e); return null; }
   }
 };
@@ -120,6 +126,7 @@ document.addEventListener('click', e => { if (e.target.classList.contains('modal
 // ─── LOGOUT ───────────────────────────────────────────────────────────
 async function logout() { auth.clearToken(); window.location.href = '/login'; }
 async function adminLogout() { auth.clearAdminToken(); window.location.href = '/admin/login'; }
+async function mentorLogout() { auth.clearMentorToken(); window.location.href = '/mentor/login'; }
 
 // ─── UTILS ────────────────────────────────────────────────────────────
 function formatDate(d) {

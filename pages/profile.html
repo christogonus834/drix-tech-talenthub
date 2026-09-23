@@ -55,6 +55,30 @@
     <div id="infoRows"></div>
   </div>
 
+  <div class="card" style="margin-bottom:20px;">
+    <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:12px;">Badges</h3>
+    <div id="badgeGrid" style="display:flex;gap:14px;flex-wrap:wrap;"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:4px;">Portfolio</h3>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:14px;">Share your approved work with employers via a public link. Nothing is shown until you turn this on.</p>
+    <div class="pref-row">
+      <span style="font-size:0.84rem;font-weight:600;">Public portfolio</span>
+      <label class="toggle"><input type="checkbox" id="portfolioToggle" onchange="savePortfolioPublic()"/><span class="toggle-slider"></span></label>
+    </div>
+    <div class="form-group" style="margin-top:8px;">
+      <label class="form-label">Your link</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" class="form-control" id="portfolioSlug" placeholder="e.g. jane-frontend"/>
+        <button class="btn btn-outline btn-sm" onclick="savePortfolioSlug()">Save</button>
+      </div>
+      <div id="portfolioLinkOut" style="font-size:0.76rem;color:var(--muted);margin-top:8px;"></div>
+    </div>
+    <div style="font-weight:700;font-size:0.85rem;margin:16px 0 10px;">Approved work</div>
+    <div id="portfolioSubs" style="font-size:0.82rem;color:var(--muted);">Loading…</div>
+  </div>
+
   <div class="card">
     <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:4px;">Email Notifications</h3>
     <p style="font-size:0.78rem;color:var(--muted);">Approval, rejection and certificate emails always send. This controls activity emails — new modules, announcements, grading and message replies.</p>
@@ -96,6 +120,64 @@ async function loadProfile() {
   ].map(([l,v]) => `<div class="info-row"><span class="lbl">${l}</span><span class="val">${esc(v)}</span></div>`).join('');
 
   if (pref) document.getElementById('emailToggle').checked = pref.email_notifications !== false;
+
+  // Badges
+  if (data.badges) {
+    document.getElementById('badgeGrid').innerHTML = data.badges.map(b => `
+      <div style="text-align:center;width:80px;opacity:${b.earned ? '1' : '0.35'};" title="${esc(b.label)} — ${b.min_points}+ points">
+        <div style="font-size:1.8rem;">${b.icon}</div>
+        <div style="font-size:0.66rem;color:var(--muted);margin-top:4px;line-height:1.3;">${esc(b.label)}</div>
+      </div>`).join('');
+  }
+}
+
+async function loadPortfolio() {
+  const p = await api.get('/api/fellows/portfolio');
+  if (!p) return;
+  document.getElementById('portfolioToggle').checked = !!p.portfolio_public;
+  document.getElementById('portfolioSlug').value = p.portfolio_slug || '';
+  renderPortfolioLink(p.portfolio_slug, p.portfolio_public);
+
+  const el = document.getElementById('portfolioSubs');
+  if (!p.submissions?.length) {
+    el.innerHTML = 'No approved assignments yet — once one is graded and approved, it will show up here to add to your portfolio.';
+    return;
+  }
+  el.innerHTML = p.submissions.map(s => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div><div style="font-weight:600;color:var(--text);">${esc(s.assignments?.title || 'Assignment')}</div>
+      <div style="font-size:0.72rem;color:var(--muted2);">${s.grade}/${s.assignments?.max_score || 100}</div></div>
+      <label class="toggle"><input type="checkbox" ${s.is_public?'checked':''} onchange="toggleSubmissionPublic('${s.id}', this.checked)"/><span class="toggle-slider"></span></label>
+    </div>`).join('');
+}
+
+function renderPortfolioLink(slug, isPublic) {
+  const out = document.getElementById('portfolioLinkOut');
+  if (!slug) { out.textContent = 'Choose a link to enable sharing.'; return; }
+  const url = `${window.location.origin}/portfolio/${slug}`;
+  out.innerHTML = isPublic
+    ? `Live at <a href="${url}" target="_blank" style="color:var(--brand-accent);">${url}</a>`
+    : `Will be at <span style="color:var(--muted2);">${url}</span> once turned on.`;
+}
+
+async function savePortfolioPublic() {
+  const checked = document.getElementById('portfolioToggle').checked;
+  const r = await api.patch('/api/fellows/portfolio-settings', { portfolio_public: checked });
+  if (r?.success) { showToast(checked ? 'Portfolio is now public' : 'Portfolio hidden', 'success'); renderPortfolioLink(document.getElementById('portfolioSlug').value, checked); }
+  else { showToast(r?.error || 'Failed to save', 'error'); document.getElementById('portfolioToggle').checked = !checked; }
+}
+
+async function savePortfolioSlug() {
+  const slug = document.getElementById('portfolioSlug').value.trim();
+  if (!slug) return showToast('Enter a link first', 'error');
+  const r = await api.patch('/api/fellows/portfolio-settings', { slug });
+  if (r?.success) { showToast('Link saved!', 'success'); document.getElementById('portfolioSlug').value = r.portfolio_slug; renderPortfolioLink(r.portfolio_slug, r.portfolio_public); }
+  else showToast(r?.error || 'Failed to save', 'error');
+}
+
+async function toggleSubmissionPublic(id, isPublic) {
+  const r = await api.patch(`/api/fellows/submissions/${id}/portfolio`, { is_public: isPublic });
+  if (!r?.success) showToast(r?.error || 'Failed to update', 'error');
 }
 
 async function uploadPhoto(input) {
@@ -123,6 +205,7 @@ async function saveEmailPref() {
 }
 
 loadProfile();
+loadPortfolio();
 </script>
 </body>
 </html>

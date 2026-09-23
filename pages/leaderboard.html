@@ -52,8 +52,10 @@ if (!localStorage.getItem('drix_token')) {
 </script>
 <script>
 async function load(){
-  const [board,me]=await Promise.all([api.get('/api/fellows/leaderboard'),api.get('/api/fellows/me')]);
+  const [board,me,badgeDefs]=await Promise.all([api.get('/api/fellows/leaderboard'),api.get('/api/fellows/me'),api.get('/api/fellows/badge-defs')]);
   if(!board?.length){document.getElementById('rankList').innerHTML='<div class="empty-state"><div class="icon">🏆</div><p>No rankings yet</p></div>';return;}
+  const defs = (badgeDefs||[]).slice().sort((a,b)=>b.min_points-a.min_points);
+  const topBadge = pts => { const b = defs.find(d=>pts>=d.min_points); return b ? `<span title="${b.label}" style="margin-left:6px;">${b.icon}</span>` : ''; };
   const myId=me?.fellow?.id;
   const myRank=board.findIndex(f=>f.id===myId)+1;
   if(myRank>0){const b=document.getElementById('myRankBadge');b.style.display='block';b.innerHTML=`Your Rank: <strong style="color:var(--accent2);">#${myRank}</strong>`;}
@@ -64,7 +66,7 @@ async function load(){
   document.getElementById('podium').innerHTML=order.map((f,i)=>`
     <div class="pod-slot">
       <div class="pod-av">${f.profile_photo?`<img src="${f.profile_photo}"/>`:(f.full_name?.charAt(0)||'?')}</div>
-      <div style="font-size:0.78rem;font-weight:600;margin-bottom:3px;">${f.full_name?.split(' ')[0]}</div>
+      <div style="font-size:0.78rem;font-weight:600;margin-bottom:3px;">${f.full_name?.split(' ')[0]}${topBadge(f.points)}</div>
       <div style="font-size:0.72rem;color:var(--muted);">🪙 ${f.points}</div>
       <div class="pod-block" style="height:${heights[i]}px;background:${colors[i]}18;border:2px solid ${colors[i]}40;">${medals[i]}</div>
     </div>`).join('');
@@ -72,7 +74,7 @@ async function load(){
     <div class="rank-row ${f.id===myId?'me':''}">
       <div class="rank-num">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
       <div class="rank-av">${f.profile_photo?`<img src="${f.profile_photo}"/>`:(f.full_name?.charAt(0)||'?')}</div>
-      <div><div style="font-weight:600;font-size:0.88rem;">${f.full_name} ${f.id===myId?'<span style="color:var(--accent2);font-size:0.72rem;">(You)</span>':''}</div><div style="font-size:0.74rem;color:var(--muted);">${f.tracks?.name||'—'} · ${f.fellow_id||''}</div></div>
+      <div><div style="font-weight:600;font-size:0.88rem;">${f.full_name}${topBadge(f.points)} ${f.id===myId?'<span style="color:var(--accent2);font-size:0.72rem;">(You)</span>':''}</div><div style="font-size:0.74rem;color:var(--muted);">${f.tracks?.name||'—'} · ${f.fellow_id||''}</div></div>
       <div style="margin-left:auto;font-weight:700;color:var(--accent2);">🪙 ${f.points}</div>
     </div>`).join('');
 }

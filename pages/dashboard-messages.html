@@ -49,6 +49,13 @@
       <div class="modal-title">Send Message to Admin</div>
       <button class="modal-close" onclick="closeModal('newMsgModal')">✕</button>
     </div>
+    <div class="form-group" id="toGroup" style="display:none;">
+      <label class="form-label">Send to</label>
+      <select class="form-control" id="msgTo">
+        <option value="admin">Admin</option>
+        <option value="mentor">Your Mentor</option>
+      </select>
+    </div>
     <div class="form-group"><label class="form-label">Subject</label><input type="text" class="form-control" id="msgSubject" placeholder="e.g. Question about my course"/></div>
     <div class="form-group"><label class="form-label">Message *</label><textarea class="form-control" id="msgBody" rows="5" placeholder="Type your message here..."></textarea></div>
     <div style="display:flex;gap:10px;margin-top:8px;">
@@ -65,6 +72,19 @@
 <script src="/js/mobile.js"></script>
 <script>
 if (!auth.getToken()) window.location.href = '/login';
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+let hasMentor = false;
+(async () => {
+  const me = await api.get('/api/fellows/me');
+  hasMentor = !!me?.fellow?.mentors;
+  if (hasMentor) document.getElementById('toGroup').style.display = '';
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('to') === 'mentor' && hasMentor) {
+    document.getElementById('msgTo').value = 'mentor';
+    openModal('newMsgModal');
+  }
+})();
 
 async function loadMessages() {
   const msgs = await api.get('/api/messages/my');
@@ -84,20 +104,20 @@ async function loadMessages() {
     <div class="msg-card ${m.status==='unread'?'unread':''}">
       <div class="flex-between mb-3">
         <div>
-          <div style="font-weight:700;font-size:0.9rem;">${m.subject}</div>
+          <div style="font-weight:700;font-size:0.9rem;">${esc(m.subject)} ${m.recipient_type==='mentor' ? '<span class="badge badge-info" style="margin-left:6px;">To: Mentor</span>' : ''}</div>
           <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${formatDate(m.sent_at)}</div>
         </div>
         <span class="badge badge-${m.status==='replied'?'approved':m.status==='read'?'info':'pending'}">${m.status}</span>
       </div>
-      <div style="font-size:0.83rem;color:var(--text2);padding:12px 14px;background:var(--bg3);border-radius:8px;line-height:1.7;">${m.message}</div>
+      <div style="font-size:0.83rem;color:var(--text2);padding:12px 14px;background:var(--bg3);border-radius:8px;line-height:1.7;">${esc(m.message)}</div>
 
       ${(m.message_replies||[]).length > 0 ? `
         <div style="margin-top:14px;">
-          <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--brand-accent);margin-bottom:8px;">Admin Reply</div>
+          <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--brand-accent);margin-bottom:8px;">${m.recipient_type==='mentor' ? 'Mentor Reply' : 'Admin Reply'}</div>
           ${m.message_replies.map(r => `
             <div class="reply-item">
-              <div style="font-size:0.76rem;color:var(--muted2);margin-bottom:6px;">Admin · ${formatDate(r.replied_at)}</div>
-              <div style="font-size:0.83rem;line-height:1.7;">${r.reply}</div>
+              <div style="font-size:0.76rem;color:var(--muted2);margin-bottom:6px;">${r.mentor_id ? 'Mentor' : 'Admin'} · ${formatDate(r.replied_at)}</div>
+              <div style="font-size:0.83rem;line-height:1.7;">${esc(r.reply)}</div>
             </div>`).join('')}
         </div>` : ''}
     </div>`).join('');
@@ -106,9 +126,10 @@ async function loadMessages() {
 async function sendMessage() {
   const subject = document.getElementById('msgSubject').value.trim();
   const message = document.getElementById('msgBody').value.trim();
+  const to = hasMentor ? document.getElementById('msgTo').value : 'admin';
   if (!message) return showToast('Please type a message', 'error');
 
-  const r = await api.post('/api/messages/send', { subject: subject || 'General Enquiry', message });
+  const r = await api.post('/api/messages/send', { subject: subject || (to==='mentor'?'Message to mentor':'General Enquiry'), message, to });
   if (r?.success) {
     showToast('Message sent!', 'success');
     closeModal('newMsgModal');

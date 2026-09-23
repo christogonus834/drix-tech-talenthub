@@ -107,6 +107,30 @@
     {
       "source": "/admin/exam",
       "destination": "/pages/admin-exam.html"
+    },
+    {
+      "source": "/admin/mentors",
+      "destination": "/pages/admin-mentors.html"
+    },
+    {
+      "source": "/admin/checkins",
+      "destination": "/pages/admin-checkins.html"
+    },
+    {
+      "source": "/mentor",
+      "destination": "/pages/mentor-login.html"
+    },
+    {
+      "source": "/mentor/login",
+      "destination": "/pages/mentor-login.html"
+    },
+    {
+      "source": "/mentor/dashboard",
+      "destination": "/pages/mentor-dashboard.html"
+    },
+    {
+      "source": "/portfolio/:slug",
+      "destination": "/pages/portfolio.html?slug=:slug"
     }
   ]
 }
