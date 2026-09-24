@@ -124,9 +124,71 @@ function closeModal(id) { document.getElementById(id)?.classList.remove('show');
 document.addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('show'); });
 
 // ─── LOGOUT ───────────────────────────────────────────────────────────
+// ─── DONUT CHART ────────────────────────────────────────────────────
+// data: [{label, value, color?}]. Uses the "percentage circle" trick (r=15.9155 →
+// circumference≈100) so stroke-dasharray values are just percentages directly.
+const DONUT_PALETTE = ['#7C6EF7','#06D6A0','#FBBF24','#F43F5E','#38BDF8','#A78BFA','#F97316','#22D3EE','#4ADE80','#F472B6','#94A3B8'];
+function renderDonutChart(container, data, opts = {}) {
+  if (!container) return;
+  data = (data || []).filter(d => d.value > 0);
+  const total = data.reduce((s, d) => s + d.value, 0);
+  if (!total) { container.innerHTML = '<p style="font-size:0.8rem;color:var(--muted);padding:20px 0;">No data yet</p>'; return; }
+
+  let offset = 0;
+  const segs = data.map((d, i) => {
+    const pct = (d.value / total) * 100;
+    const color = d.color || DONUT_PALETTE[i % DONUT_PALETTE.length];
+    const o = offset;
+    offset += pct;
+    return { ...d, color, pct, offset: o };
+  });
+
+  const svg = `<svg viewBox="0 0 36 36" style="width:${opts.size||128}px;height:${opts.size||128}px;flex-shrink:0;">
+    ${segs.map(s => `<circle cx="18" cy="18" r="15.9155" fill="none" stroke="${s.color}" stroke-width="4.2"
+      stroke-dasharray="${s.pct} ${100-s.pct}" stroke-dashoffset="${-s.offset}" transform="rotate(-90 18 18)">
+      <title>${s.label}: ${s.value} (${s.pct.toFixed(1)}%)</title></circle>`).join('')}
+    <circle cx="18" cy="18" r="11.5" fill="${opts.holeColor || 'var(--surface)'}"/>
+  </svg>`;
+
+  const legend = `<div style="display:flex;flex-direction:column;gap:7px;flex:1;min-width:0;">${segs.map(s => `
+    <div style="display:flex;align-items:center;gap:8px;font-size:0.76rem;">
+      <span style="width:9px;height:9px;border-radius:50%;background:${s.color};flex-shrink:0;"></span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.label}">${s.label}</span>
+      <span style="font-weight:700;">${s.value}</span>
+      <span style="color:var(--muted);width:36px;text-align:right;">${s.pct.toFixed(0)}%</span>
+    </div>`).join('')}</div>`;
+
+  container.innerHTML = `<div style="display:flex;gap:18px;align-items:center;">${svg}${legend}</div>`;
+}
+
 async function logout() { auth.clearToken(); window.location.href = '/login'; }
 async function adminLogout() { auth.clearAdminToken(); window.location.href = '/admin/login'; }
 async function mentorLogout() { auth.clearMentorToken(); window.location.href = '/mentor/login'; }
+
+// ─── MONETAG (public pages only — homepage/blog, never the logged-in dashboard) ──
+// `s` is the object returned by /api/admin/settings/public. Gated to Sat/Sun in the
+// visitor's own local time when monetag_weekends_only isn't explicitly 'false'.
+function loadMonetagIfEligible(s) {
+  try {
+    if (!s || s.monetag_enabled !== 'true' || !s.monetag_zone_script) return;
+    const weekendsOnly = s.monetag_weekends_only !== 'false';
+    const day = new Date().getDay(); // 0 = Sunday, 6 = Saturday
+    const isWeekend = day === 0 || day === 6;
+    if (weekendsOnly && !isWeekend) return;
+
+    // Parse the pasted snippet (may include <script src="...">, inline <script>, or plain markup)
+    // into real DOM nodes — setting innerHTML alone won't execute <script> tags.
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = s.monetag_zone_script;
+    wrapper.querySelectorAll('script').forEach(old => {
+      const fresh = document.createElement('script');
+      [...old.attributes].forEach(a => fresh.setAttribute(a.name, a.value));
+      fresh.text = old.textContent || '';
+      old.replaceWith(fresh);
+    });
+    document.body.appendChild(wrapper);
+  } catch (e) { console.error('Monetag load error:', e); }
+}
 
 // ─── UTILS ────────────────────────────────────────────────────────────
 function formatDate(d) {
@@ -186,7 +248,7 @@ async function sendAIMessage(inputId, messagesId, context = '') {
       const msg = data?.error || 'AI assistant is temporarily unavailable.';
       msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble" style="color:var(--brand-warning);">${msg}</div></div>`;
     } else if (data.not_configured) {
-      msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble" style="color:var(--brand-warning);">AI assistant not configured yet. Admin needs to add the Gemini API key.</div></div>`;
+      msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble" style="color:var(--brand-warning);">AI assistant not configured yet. Admin needs to add an AI provider key.</div></div>`;
     } else {
       const reply = data.reply || 'I could not process that. Please try again.';
       msgs.innerHTML += `<div class="ai-msg assistant animate-fade"><div class="ai-bubble">${reply.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div></div>`;

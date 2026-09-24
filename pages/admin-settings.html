@@ -115,6 +115,23 @@
       <div class="form-group"><label class="form-label">AdSense Client ID</label><input type="text" class="form-control" id="adsense_client_id" placeholder="ca-pub-XXXXXXXXXXXXXXXX"/></div>
       <div class="form-group" style="margin-bottom:0;"><label class="form-label">AdSense Slot ID</label><input type="text" class="form-control" id="adsense_slot_id" placeholder="1234567890"/></div>
     </div>
+
+    <!-- Monetag -->
+    <div class="setting-row" style="margin-top:16px;">
+      <div class="si"><h4>Monetag</h4><p>Ad network on the public website (homepage &amp; blog only — never the fellow dashboard)</p></div>
+      <label class="toggle"><input type="checkbox" id="monetag_enabled" onchange="toggleMonetagFields()"/><span class="toggle-slider"></span></label>
+    </div>
+    <div class="adsense-fields" id="monetagFields">
+      <div class="form-group">
+        <label class="form-label">Ad tag / zone script</label>
+        <textarea class="form-control" id="monetag_zone_script" rows="3" placeholder="Paste the exact <script> snippet from your Monetag zone here"></textarea>
+        <p style="font-size:0.72rem;color:var(--muted);margin-top:6px;">From your Monetag dashboard → Ad zone → Copy code. Paste it exactly as given.</p>
+      </div>
+      <div class="setting-row" style="padding:0;margin-bottom:0;">
+        <div class="si"><h4 style="font-size:0.82rem;">Weekends only</h4><p style="font-size:0.72rem;">Only show these ads on Saturday and Sunday (visitor's local time)</p></div>
+        <label class="toggle"><input type="checkbox" id="monetag_weekends_only"/><span class="toggle-slider"></span></label>
+      </div>
+    </div>
   </div>
 
   <!-- REGISTRATION -->
@@ -216,6 +233,10 @@ function toggleAdsenseFields() {
   document.getElementById('adsenseFields').classList.toggle('show', document.getElementById('adsense_enabled').checked);
 }
 
+function toggleMonetagFields() {
+  document.getElementById('monetagFields').classList.toggle('show', document.getElementById('monetag_enabled').checked);
+}
+
 function previewImg(inputId, previewId) {
   const url = document.getElementById(inputId).value;
   const img = document.getElementById(previewId);
@@ -247,6 +268,9 @@ async function loadSettings() {
   chk('adsense_enabled', s.adsense_enabled === 'true');
   set('adsense_client_id', s.adsense_client_id);
   set('adsense_slot_id', s.adsense_slot_id);
+  chk('monetag_enabled', s.monetag_enabled === 'true');
+  set('monetag_zone_script', s.monetag_zone_script);
+  chk('monetag_weekends_only', s.monetag_weekends_only !== 'false');
   chk('registration_open', s.registration_open !== 'false');
   set('site_name', s.site_name);
   set('site_logo', s.site_logo);
@@ -260,6 +284,7 @@ async function loadSettings() {
 
   switchProvider(s.payment_provider || 'flutterwave');
   toggleAdsenseFields();
+  toggleMonetagFields();
   previewImg('site_logo', 'logoPreview');
   previewImg('sig1_logo', 'sig1Preview');
   previewImg('sig2_logo', 'sig2Preview');
@@ -285,6 +310,9 @@ async function saveSettings() {
     adsense_enabled: getChk('adsense_enabled'),
     adsense_client_id: getVal('adsense_client_id'),
     adsense_slot_id: getVal('adsense_slot_id'),
+    monetag_enabled: getChk('monetag_enabled'),
+    monetag_zone_script: getVal('monetag_zone_script'),
+    monetag_weekends_only: getChk('monetag_weekends_only'),
     registration_open: getChk('registration_open'),
     site_name: getVal('site_name'),
     site_logo: getVal('site_logo'),

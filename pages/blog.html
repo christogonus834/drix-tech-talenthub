@@ -127,5 +127,16 @@ body{padding-top:64px;}
   <div>Drix Software Foundation © 2026 · Sponsored by ePayBillz Telecomm</div>
   <div style="display:flex;gap:20px;"><a href="/terms" style="color:var(--muted);">Terms</a><a href="/contact" style="color:var(--muted);">Contact</a><a href="/verify" style="color:var(--muted);">Verify Certificate</a></div>
 </footer>
+
+<script src="/js/app.js"></script>
+<script>
+(async () => {
+  try {
+    const res = await fetch('/api/admin/settings/public');
+    const s = await res.json();
+    loadMonetagIfEligible(s);
+  } catch(e) {}
+})();
+</script>
 </body>
 </html>

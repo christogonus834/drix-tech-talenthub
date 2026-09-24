@@ -239,6 +239,9 @@ tw();
       sc.async = true; sc.crossOrigin = 'anonymous';
       document.head.appendChild(sc);
     }
+
+    // Load Monetag (weekends-only by default — see app.js)
+    loadMonetagIfEligible(s);
   } catch(e) {}
 })();
 </script>
