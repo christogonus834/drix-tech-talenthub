@@ -13,6 +13,10 @@
       "destination": "/pages/login.html"
     },
     {
+      "source": "/forgot-password",
+      "destination": "/pages/forgot-password.html"
+    },
+    {
       "source": "/verify",
       "destination": "/pages/verify.html"
     },
