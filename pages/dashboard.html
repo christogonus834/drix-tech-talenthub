@@ -173,6 +173,13 @@
       <a href="/dashboard/messages?to=mentor" class="btn btn-primary btn-sm w-full" style="margin-top:14px;">Message Your Mentor</a>
     </div>
 
+    <!-- PORTFOLIO -->
+    <div class="card" id="portfolioCard">
+      <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:8px;">Portfolio</h3>
+      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;" id="portfolioStatus">Loading…</p>
+      <a href="/dashboard/profile#portfolio" class="btn btn-outline btn-sm w-full" id="portfolioBtn">Manage Portfolio</a>
+    </div>
+
     <!-- ANNOUNCEMENTS -->
     <div class="card">
       <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:8px;">Announcements</h3>
@@ -429,6 +436,19 @@ async function submitCheckin() {
 
 loadDashboard();
 loadCheckinStatus();
+loadPortfolioStatus();
+
+async function loadPortfolioStatus() {
+  const p = await api.get('/api/fellows/portfolio');
+  if (!p) return;
+  const el = document.getElementById('portfolioStatus');
+  const publicCount = (p.submissions || []).filter(s => s.is_public).length;
+  if (p.portfolio_public && p.portfolio_slug) {
+    el.innerHTML = `🟢 Live with ${publicCount} piece${publicCount===1?'':'s'} of work — <a href="/portfolio/${p.portfolio_slug}" target="_blank" style="color:var(--brand-accent);">view it</a>`;
+  } else {
+    el.textContent = 'Not public yet — share approved work with employers.';
+  }
+}
 </script>
 </body>
 </html>
