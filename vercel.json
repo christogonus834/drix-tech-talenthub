@@ -17,6 +17,10 @@
       "destination": "/pages/forgot-password.html"
     },
     {
+      "source": "/privacy",
+      "destination": "/pages/privacy.html"
+    },
+    {
       "source": "/verify",
       "destination": "/pages/verify.html"
     },
@@ -119,6 +123,10 @@
     {
       "source": "/admin/checkins",
       "destination": "/pages/admin-checkins.html"
+    },
+    {
+      "source": "/admin/mtt-roster",
+      "destination": "/pages/admin-mtt-roster.html"
     },
     {
       "source": "/mentor",

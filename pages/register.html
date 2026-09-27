@@ -207,7 +207,7 @@ body { margin: 0; min-height: 100vh; background: var(--bg); }
       </div>
       <div class="perk">
         <div class="perk-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-        <div class="perk-text"><strong>Vibrant Community</strong><span>Connect with peers across Nigeria</span></div>
+        <div class="perk-text"><strong>Vibrant Community</strong><span>Connect with peers across Africa</span></div>
       </div>
       <div class="perk">
         <div class="perk-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
@@ -287,7 +287,13 @@ body { margin: 0; min-height: 100vh; background: var(--bg); }
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">State of Residence *</label>
+            <label class="form-label">Country *</label>
+            <select class="form-control" id="country" required onchange="onCountryChange()">
+              <option value="Nigeria">Nigeria</option>
+            </select>
+          </div>
+          <div class="form-group" id="stateFieldWrap">
+            <label class="form-label" id="stateLabel">State of Residence *</label>
             <select class="form-control" id="state" required>
               <option value="">Select state</option>
               <option>Abia</option><option>Adamawa</option><option>Akwa Ibom</option><option>Anambra</option><option>Bauchi</option><option>Bayelsa</option><option>Benue</option><option>Borno</option><option>Cross River</option><option>Delta</option><option>Ebonyi</option><option>Edo</option><option>Ekiti</option><option>Enugu</option><option>FCT - Abuja</option><option>Gombe</option><option>Imo</option><option>Jigawa</option><option>Kaduna</option><option>Kano</option><option>Katsina</option><option>Kebbi</option><option>Kogi</option><option>Kwara</option><option>Lagos</option><option>Nasarawa</option><option>Niger</option><option>Ogun</option><option>Ondo</option><option>Osun</option><option>Oyo</option><option>Plateau</option><option>Rivers</option><option>Sokoto</option><option>Taraba</option><option>Yobe</option><option>Zamfara</option>
@@ -410,13 +416,54 @@ async function loadTracks() {
   }
 }
 
+// ── COUNTRIES ──────────────────────────────────────────────────────
+const NIGERIA_STATES_HTML = '<option value="">Select state</option><option>Abia</option><option>Adamawa</option><option>Akwa Ibom</option><option>Anambra</option><option>Bauchi</option><option>Bayelsa</option><option>Benue</option><option>Borno</option><option>Cross River</option><option>Delta</option><option>Ebonyi</option><option>Edo</option><option>Ekiti</option><option>Enugu</option><option>FCT - Abuja</option><option>Gombe</option><option>Imo</option><option>Jigawa</option><option>Kaduna</option><option>Kano</option><option>Katsina</option><option>Kebbi</option><option>Kogi</option><option>Kwara</option><option>Lagos</option><option>Nasarawa</option><option>Niger</option><option>Ogun</option><option>Ondo</option><option>Osun</option><option>Oyo</option><option>Plateau</option><option>Rivers</option><option>Sokoto</option><option>Taraba</option><option>Yobe</option><option>Zamfara</option>';
+let activeCountries = ['Nigeria'];
+
+function onCountryChange() {
+  const country = document.getElementById('country').value;
+  const wrap = document.getElementById('stateFieldWrap');
+  if (country === 'Nigeria') {
+    wrap.innerHTML = `<label class="form-label" id="stateLabel">State of Residence *</label>
+      <select class="form-control" id="state" required>${NIGERIA_STATES_HTML}</select>`;
+  } else {
+    wrap.innerHTML = `<label class="form-label" id="stateLabel">State / Region / Province *</label>
+      <input type="text" class="form-control" id="state" placeholder="e.g. Greater Accra" required/>`;
+  }
+}
+
+async function loadCountries() {
+  try {
+    const res = await fetch(API_BASE + '/api/admin/settings/public');
+    const s = await res.json();
+    const list = String(s.active_countries || 'Nigeria').split(',').map(c => c.trim()).filter(Boolean);
+    activeCountries = list.length ? list : ['Nigeria'];
+
+    const sel = document.getElementById('country');
+    sel.innerHTML = activeCountries.map(c => `<option>${c}</option>`).join('');
+
+    const tagline = document.getElementById('freeTag');
+    if (tagline && !tagline.dataset.paid) {
+      tagline.textContent = activeCountries.length > 1
+        ? `Completely free. Open to fellows in ${activeCountries.slice(0, -1).join(', ')} and ${activeCountries[activeCountries.length - 1]}.`
+        : `Completely free. Open to fellows in ${activeCountries[0]}.`;
+    }
+  } catch (e) {
+    console.error('Countries error:', e);
+  }
+}
+
 // ── LOAD PAYMENT CONFIG ──────────────────────────────────────────────
 async function loadPaymentConfig() {
   try {
     const res = await fetch(API_BASE + '/api/payments/config');
     payConfig = await res.json();
     if (payConfig?.payment_enabled && payConfig?.registration_fee > 0) {
-      document.getElementById('freeTag').textContent = 'Open to all Nigerians.';
+      const tagline = document.getElementById('freeTag');
+      tagline.dataset.paid = '1';
+      tagline.textContent = activeCountries.length > 1
+        ? `Open to fellows in ${activeCountries.join(', ')}.`
+        : `Open to fellows in ${activeCountries[0]}.`;
       const symbol = payConfig.payment_currency === 'USD' ? '$' : payConfig.payment_currency === 'GHS' ? '₵' : '₦';
       const amount = Number(payConfig.registration_fee).toLocaleString();
       document.getElementById('payBanner').classList.add('show');
@@ -589,6 +636,7 @@ async function submitForm(payRef, payProvider) {
     phone: document.getElementById('phone').value,
     gender: document.getElementById('gender').value,
     date_of_birth: document.getElementById('date_of_birth').value,
+    country: document.getElementById('country').value,
     state: document.getElementById('state').value,
     track_id: document.getElementById('track_id').value,
     epayybillz_user_id: document.getElementById('epayybillz_user_id').value,
@@ -616,7 +664,7 @@ async function submitForm(payRef, payProvider) {
 
 // ── INIT ──────────────────────────────────────────────────────────────
 loadTracks();
-loadPaymentConfig();
+loadCountries().then(loadPaymentConfig);
 updateStepBar(1);
 
 // Fix grid on mobile

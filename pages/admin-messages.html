@@ -27,6 +27,7 @@
     <a href="/admin/fellows" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>Fellows</a>
     <a href="/admin/mentors" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Mentors</a>
     <a href="/admin/checkins" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>Check-ins</a>
+    <a href="/admin/mtt-roster" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.12 0 4.07.74 5.61 1.98"/><path d="M21 3v6h-6"/></svg></span>3MTT Roster</a>
     <div class="sidebar-section-label">Content</div>
     <a href="/admin/courses" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Tracks & Modules</a>
     <a href="/admin/cohorts" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Cohorts</a>
@@ -73,6 +74,7 @@
 <script src="/js/mobile.js"></script>
 <script>
 if (!auth.getAdminToken()) window.location.href = '/admin/login';
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 let allMessages = [];
 let selectedMsgId = null;
@@ -92,13 +94,13 @@ async function loadMessages(status = '', btn) {
 
   document.getElementById('messageList').innerHTML = allMessages.map(m => `
     <div class="msg-item ${m.status==='unread'?'unread':''}" id="msgItem-${m.id}" onclick="openThread('${m.id}')">
-      <div class="avatar">${m.fellows?.profile_photo ? `<img src="${m.fellows.profile_photo}"/>` : (m.fellows?.full_name?.charAt(0)||'?')}</div>
+      <div class="avatar">${m.fellows?.profile_photo ? `<img src="${m.fellows.profile_photo}"/>` : esc(m.fellows?.full_name?.charAt(0)||'?')}</div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
-          <span class="msg-subject">${m.fellows?.full_name || 'Unknown'}</span>
+          <span class="msg-subject">${esc(m.fellows?.full_name || 'Unknown')}</span>
           ${m.status==='unread' ? '<span style="width:7px;height:7px;border-radius:50%;background:var(--brand-primary);flex-shrink:0;"></span>' : ''}
         </div>
-        <div class="msg-preview">${m.subject}</div>
+        <div class="msg-preview">${esc(m.subject)}</div>
         <div style="font-size:0.68rem;color:var(--muted2);margin-top:2px;">${formatDate(m.sent_at)}</div>
       </div>
     </div>`).join('');
@@ -122,27 +124,27 @@ function openThread(msgId) {
   const replies = msg.message_replies || [];
   document.getElementById('threadView').innerHTML = `
     <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;">
-      <div class="avatar avatar-lg">${msg.fellows?.profile_photo ? `<img src="${msg.fellows.profile_photo}"/>` : (msg.fellows?.full_name?.charAt(0)||'?')}</div>
+      <div class="avatar avatar-lg">${msg.fellows?.profile_photo ? `<img src="${msg.fellows.profile_photo}"/>` : esc(msg.fellows?.full_name?.charAt(0)||'?')}</div>
       <div>
-        <div style="font-weight:700;font-size:0.95rem;">${msg.fellows?.full_name || 'Unknown'}</div>
-        <div style="font-size:0.74rem;color:var(--muted);">${msg.fellows?.email || ''} · ${msg.fellows?.fellow_id || ''}</div>
+        <div style="font-weight:700;font-size:0.95rem;">${esc(msg.fellows?.full_name || 'Unknown')}</div>
+        <div style="font-size:0.74rem;color:var(--muted);">${esc(msg.fellows?.email || '')} · ${esc(msg.fellows?.fellow_id || '')}</div>
       </div>
       <span class="badge badge-${msg.status}" style="margin-left:auto;">${msg.status}</span>
     </div>
 
     <div style="flex:1;overflow-y:auto;padding:20px 24px;">
-      <div style="font-size:0.74rem;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;">Subject: ${msg.subject}</div>
-      <div class="reply-bubble">${msg.message}</div>
+      <div style="font-size:0.74rem;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;">Subject: ${esc(msg.subject)}</div>
+      <div class="reply-bubble">${esc(msg.message)}</div>
       <div style="font-size:0.7rem;color:var(--muted2);margin-bottom:20px;">${formatDate(msg.sent_at)}</div>
 
       ${replies.map(r => `
         <div style="font-size:0.7rem;color:var(--muted2);text-align:right;margin-bottom:4px;">Admin · ${formatDate(r.replied_at)}</div>
-        <div class="reply-bubble admin">${r.reply}</div>
+        <div class="reply-bubble admin">${esc(r.reply)}</div>
       `).join('')}
     </div>
 
     <div style="padding:16px 24px;border-top:1px solid var(--border);">
-      <div style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Reply to ${msg.fellows?.full_name}</div>
+      <div style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Reply to ${esc(msg.fellows?.full_name)}</div>
       <textarea class="form-control" id="replyText" rows="3" placeholder="Type your reply..."></textarea>
       <div style="display:flex;justify-content:flex-end;margin-top:10px;">
         <button class="btn btn-primary" onclick="sendReply('${msgId}')">

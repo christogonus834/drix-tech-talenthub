@@ -39,6 +39,7 @@
     <a href="/admin/fellows" class="sidebar-link"><span class="icon">👥</span> Fellows</a>
     <a href="/admin/mentors" class="sidebar-link"><span class="icon">🎓</span> Mentors</a>
     <a href="/admin/checkins" class="sidebar-link"><span class="icon">✅</span> Check-ins</a>
+    <a href="/admin/mtt-roster" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.12 0 4.07.74 5.61 1.98"/><path d="M21 3v6h-6"/></svg></span>3MTT Roster</a>
     <div class="sidebar-section-label">Content</div>
     <a href="/admin/courses" class="sidebar-link"><span class="icon">📚</span> Courses</a>
     <a href="/admin/cohorts" class="sidebar-link"><span class="icon">🎓</span> Cohorts</a>
@@ -141,6 +142,10 @@
     <div class="setting-row">
       <div class="si"><h4>Open Registration</h4><p>Allow new fellows to submit applications</p></div>
       <label class="toggle"><input type="checkbox" id="registration_open"/><span class="toggle-slider"></span></label>
+    </div>
+    <div class="setting-row" style="display:block;padding-top:16px;">
+      <div class="si" style="margin-bottom:10px;"><h4>Countries Open for Registration</h4><p>Comma-separated. The first one is the default. Start with just Nigeria and add more as you expand across Africa.</p></div>
+      <input type="text" class="form-control" id="active_countries" placeholder="Nigeria, Ghana, Kenya"/>
     </div>
   </div>
 
@@ -272,6 +277,7 @@ async function loadSettings() {
   set('monetag_zone_script', s.monetag_zone_script);
   chk('monetag_weekends_only', s.monetag_weekends_only !== 'false');
   chk('registration_open', s.registration_open !== 'false');
+  set('active_countries', s.active_countries || 'Nigeria');
   set('site_name', s.site_name);
   set('site_logo', s.site_logo);
   set('site_favicon', s.site_favicon);
@@ -314,6 +320,7 @@ async function saveSettings() {
     monetag_zone_script: getVal('monetag_zone_script'),
     monetag_weekends_only: getChk('monetag_weekends_only'),
     registration_open: getChk('registration_open'),
+    active_countries: getVal('active_countries'),
     site_name: getVal('site_name'),
     site_logo: getVal('site_logo'),
     site_favicon: getVal('site_favicon'),

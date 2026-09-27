@@ -56,6 +56,15 @@
   </div>
 
   <div class="card" style="margin-bottom:20px;">
+    <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:4px;">3MTT ID</h3>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">If you've been selected into the Federal Government's 3MTT programme, enter your official ID here so it's linked to your record.</p>
+    <div style="display:flex;gap:8px;">
+      <input type="text" class="form-control" id="mttIdInput" placeholder="e.g. FELL-123456"/>
+      <button class="btn btn-outline btn-sm" onclick="saveMttId()">Save</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
     <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:12px;">Badges</h3>
     <div id="badgeGrid" style="display:flex;gap:14px;flex-wrap:wrap;"></div>
   </div>
@@ -109,6 +118,13 @@ async function loadProfile() {
   document.getElementById('nameEl').textContent = f.full_name;
   document.getElementById('emailEl').textContent = f.email;
   document.getElementById('idEl').textContent = f.fellow_id || 'Pending ID';
+
+  const mttInput = document.getElementById('mttIdInput');
+  if (f.mtt_id) {
+    mttInput.value = f.mtt_id;
+    mttInput.disabled = true;
+    document.querySelector('#mttIdInput').nextElementSibling.style.display = 'none';
+  }
 
   document.getElementById('infoRows').innerHTML = [
     ['Track', f.tracks?.name || '—'],
@@ -202,6 +218,20 @@ async function saveEmailPref() {
   const r = await api.patch('/api/fellows/email-preferences', { email_notifications: checked });
   if (r?.success) showToast(checked ? 'Activity emails turned on' : 'Activity emails turned off', 'success');
   else { showToast(r?.error || 'Failed to save', 'error'); document.getElementById('emailToggle').checked = !checked; }
+}
+
+async function saveMttId() {
+  const input = document.getElementById('mttIdInput');
+  const mtt_id = input.value.trim();
+  if (!mtt_id) return showToast('Enter your 3MTT ID first', 'error');
+  const r = await api.patch('/api/fellows/mtt-id', { mtt_id });
+  if (r?.success) {
+    showToast('3MTT ID verified and linked!', 'success');
+    input.disabled = true;
+    input.nextElementSibling.style.display = 'none';
+  } else {
+    showToast(r?.error || 'Failed to verify ID', 'error');
+  }
 }
 
 loadProfile();

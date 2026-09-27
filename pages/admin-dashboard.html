@@ -23,6 +23,7 @@
     </a>
     <a href="/admin/mentors" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Mentors</a>
     <a href="/admin/checkins" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>Check-ins</a>
+    <a href="/admin/mtt-roster" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.12 0 4.07.74 5.61 1.98"/><path d="M21 3v6h-6"/></svg></span>3MTT Roster</a>
     <div class="sidebar-section-label">Content</div>
     <a href="/admin/courses" class="sidebar-link">
       <span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
@@ -128,12 +129,19 @@
     </div>
   </div>
 
-  <div class="grid-2 mt-6">
+  <div class="grid-3 mt-6" style="align-items:start;">
     <!-- Tracks breakdown -->
     <div class="card">
       <h3 style="font-size:0.86rem;font-weight:700;margin-bottom:4px;">Fellows by Track</h3>
       <p style="font-size:0.72rem;color:var(--muted);margin-bottom:16px;">Distribution across tracks</p>
       <div id="trackDonut"></div>
+    </div>
+
+    <!-- Countries breakdown -->
+    <div class="card">
+      <h3 style="font-size:0.86rem;font-weight:700;margin-bottom:4px;">Fellows by Country</h3>
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:16px;">As we expand across Africa</p>
+      <div id="countryDonut"></div>
     </div>
 
     <!-- States breakdown -->
@@ -183,6 +191,7 @@
 <script>
 // Guard
 if (!auth.getAdminToken()) window.location.href = '/admin/login';
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 async function loadDashboard() {
   const stats = await api.get('/api/admin/stats', true);
@@ -226,6 +235,9 @@ async function loadDashboard() {
   // States breakdown
   renderDonutChart(document.getElementById('stateDonut'), (stats.states || []).map(s => ({ label: s.name, value: s.count })));
 
+  // Countries breakdown
+  renderDonutChart(document.getElementById('countryDonut'), (stats.countries || []).map(c => ({ label: c.name, value: c.count })));
+
   // Load pending fellows
   const pending = await api.get('/api/admin/fellows?status=pending&limit=5', true);
   const pendingList = document.getElementById('pendingList');
@@ -234,10 +246,10 @@ async function loadDashboard() {
   } else {
     pendingList.innerHTML = pending.data.map(f => `
       <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
-        <div class="avatar">${f.profile_photo ? `<img src="${f.profile_photo}"/>` : f.full_name.charAt(0)}</div>
+        <div class="avatar">${f.profile_photo ? `<img src="${f.profile_photo}"/>` : esc(f.full_name.charAt(0))}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:600;font-size:0.84rem;">${f.full_name}</div>
-          <div style="font-size:0.72rem;color:var(--muted);">${f.tracks?.name || '—'} · ${formatDate(f.created_at)}</div>
+          <div style="font-weight:600;font-size:0.84rem;">${esc(f.full_name)}</div>
+          <div style="font-size:0.72rem;color:var(--muted);">${esc(f.tracks?.name || '—')} · ${formatDate(f.created_at)}</div>
         </div>
         <button class="btn btn-success btn-sm" onclick="approveFellow('${f.id}')">Approve</button>
       </div>`).join('');
@@ -251,10 +263,10 @@ async function loadDashboard() {
   } else {
     recentList.innerHTML = recent.data.map(f => `
       <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
-        <div class="avatar">${f.profile_photo ? `<img src="${f.profile_photo}"/>` : f.full_name.charAt(0)}</div>
+        <div class="avatar">${f.profile_photo ? `<img src="${f.profile_photo}"/>` : esc(f.full_name.charAt(0))}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:600;font-size:0.84rem;">${f.full_name}</div>
-          <div style="font-size:0.72rem;color:var(--muted);">${f.tracks?.name || '—'}</div>
+          <div style="font-weight:600;font-size:0.84rem;">${esc(f.full_name)}</div>
+          <div style="font-size:0.72rem;color:var(--muted);">${esc(f.tracks?.name || '—')}</div>
         </div>
         <span class="badge badge-${f.status}">${f.status}</span>
       </div>`).join('');
