@@ -1,5 +1,5 @@
 // ─── CONFIG ───────────────────────────────────────────────────────────
-const API_BASE = 'https://drix-talenthub-backend.onrender.com';
+const API_BASE = 'https://drix-talenthub-backend-4c0h.onrender.com';
 
 // ─── SVG ICONS ────────────────────────────────────────────────────────
 const icons = {
