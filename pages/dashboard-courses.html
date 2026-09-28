@@ -20,6 +20,17 @@
 .submit-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;}
 .submit-overlay.show{display:flex;}
 .submit-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rxl);max-width:520px;width:100%;padding:26px;}
+#capstoneSection{margin-top:28px;}
+.capstone-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rxl);padding:24px;}
+.capstone-card.locked{opacity:0.6;}
+.capstone-score-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0;}
+.capstone-score-cell{background:var(--bg3);border-radius:var(--r);padding:12px;text-align:center;}
+.capstone-score-cell .n{font-size:1.3rem;font-weight:800;}
+.capstone-score-cell .l{font-size:0.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;}
+.grade-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:50px;font-weight:700;font-size:0.8rem;}
+.grade-pill.Distinction{background:rgba(6,214,160,0.14);color:#06D6A0;}
+.grade-pill.Merit{background:rgba(124,110,247,0.14);color:var(--brand-secondary);}
+.grade-pill.Pass{background:rgba(251,191,36,0.14);color:#FBBF24;}
 </style>
 </head>
 <body>
@@ -50,6 +61,9 @@
 
   <!-- MODULES LIST -->
   <div id="modulesList"><div class="flex-center" style="padding:60px;"><span class="loader"></span></div></div>
+
+  <!-- CAPSTONE -->
+  <div id="capstoneSection"></div>
 
   <!-- LESSON VIEWER -->
   <div class="lesson-viewer" id="lessonViewer">
@@ -235,6 +249,113 @@ async function loadCourses() {
     toggleModule('mod-'+qp.get('module'));
     if (qp.get('assignment')) setTimeout(() => { openAssignment(qp.get('assignment')); document.getElementById('assign-'+qp.get('assignment'))?.scrollIntoView({behavior:'smooth',block:'center'}); }, 200);
   }
+
+  loadCapstone();
+  if (qp.get('capstone') || location.hash === '#capstone') {
+    setTimeout(() => document.getElementById('capstoneSection')?.scrollIntoView({ behavior: 'smooth' }), 200);
+  }
+}
+
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── CAPSTONE ──────────────────────────────────────────────────────────
+const CAPSTONE_LABELS = {
+  code:     { field: 'repo_url',  label: 'GitHub repo link', placeholder: 'https://github.com/yourname/project', required: true },
+  design:   { field: 'live_url',  label: 'Portfolio / design link', placeholder: 'https://your-work.example.com', required: true },
+  document: { field: 'live_url',  label: 'Report / case-study link', placeholder: 'https://docs.google.com/…', required: true },
+};
+
+async function loadCapstone() {
+  const el = document.getElementById('capstoneSection');
+  if (!fellowTrackId) { el.innerHTML = ''; return; }
+
+  const r = await api.get(`/api/capstone/${fellowTrackId}`);
+  if (r?.locked) {
+    el.innerHTML = `
+      <div class="capstone-card locked">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.3rem;">🔒</span>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;">Capstone Project</div>
+            <div style="font-size:0.8rem;color:var(--muted);margin-top:2px;">Complete all your modules and the track exam to unlock this.</div>
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+  if (!r) { el.innerHTML = ''; return; }
+
+  const sub = r.submission;
+  const type = r.capstone_type;
+  const cfg = CAPSTONE_LABELS[type] || CAPSTONE_LABELS.code;
+
+  const statusBadge = !sub ? ''
+    : sub.status === 'graded' ? `<span class="grade-pill ${sub.grade}">${sub.grade} · ${sub.total_score}/100</span>`
+    : sub.status === 'returned' ? '<span class="badge badge-danger">Needs revision</span>'
+    : '<span class="badge badge-pending">Submitted — awaiting review</span>';
+
+  const gradedBlock = (sub && sub.status === 'graded') ? `
+    <div class="capstone-score-grid">
+      <div class="capstone-score-cell"><div class="n">${sub.score_functionality}</div><div class="l">Functionality</div></div>
+      <div class="capstone-score-cell"><div class="n">${sub.score_technical}</div><div class="l">Technical</div></div>
+      <div class="capstone-score-cell"><div class="n">${sub.score_presentation}</div><div class="l">Presentation</div></div>
+      <div class="capstone-score-cell"><div class="n">${sub.score_originality}</div><div class="l">Originality</div></div>
+    </div>` : '';
+
+  const feedbackBlock = (sub && sub.feedback) ? `
+    <div style="background:var(--bg3);border-left:3px solid var(--brand-secondary);border-radius:8px;padding:12px 14px;margin:14px 0;font-size:0.85rem;line-height:1.6;">${esc(sub.feedback)}</div>` : '';
+
+  const ghBlock = (sub && sub.gh_fetched_at && type === 'code') ? `
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:10px;">
+      📦 ${sub.gh_commit_count ?? '—'} commits${sub.gh_primary_language ? ` · ${esc(sub.gh_primary_language)}` : ''}${sub.gh_first_commit_at ? ` · since ${new Date(sub.gh_first_commit_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}` : ''}
+    </div>` : '';
+
+  el.innerHTML = `
+    <div class="capstone-card">
+      <div class="flex-between" style="margin-bottom:12px;">
+        <div style="font-weight:700;font-size:1.05rem;">🎓 Capstone Project</div>
+        ${statusBadge}
+      </div>
+      <p style="font-size:0.86rem;color:var(--text2);line-height:1.7;margin-bottom:18px;">${esc(r.brief)}</p>
+      ${gradedBlock}${feedbackBlock}${ghBlock}
+      <form id="capstoneForm" style="margin-top:16px;">
+        <div class="form-group"><label class="form-label">Project title *</label><input class="form-control" id="cTitle" value="${esc(sub?.title || '')}" required/></div>
+        <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="cDescription" rows="3">${esc(sub?.description || '')}</textarea></div>
+        <div class="form-group"><label class="form-label">${cfg.label} ${cfg.required ? '*' : '(optional)'}</label><input class="form-control" id="cMainLink" placeholder="${cfg.placeholder}" value="${esc(sub?.[cfg.field] || '')}"/></div>
+        ${cfg.field !== 'repo_url' ? `<div class="form-group"><label class="form-label">GitHub repo link (optional)</label><input class="form-control" id="cRepoExtra" placeholder="https://github.com/…" value="${esc(sub?.repo_url || '')}"/></div>` : ''}
+        ${cfg.field !== 'live_url' ? `<div class="form-group"><label class="form-label">Live demo link (optional)</label><input class="form-control" id="cLiveExtra" placeholder="https://…" value="${esc(sub?.live_url || '')}"/></div>` : ''}
+        <div class="form-group"><label class="form-label">Video walkthrough (optional)</label><input class="form-control" id="cVideo" placeholder="https://…" value="${esc(sub?.video_url || '')}"/></div>
+        <div id="capstoneAlert" class="alert alert-error"></div>
+        <button type="submit" class="btn btn-primary" id="capstoneSubmitBtn">${sub ? 'Resubmit Capstone' : 'Submit Capstone'}</button>
+      </form>
+    </div>`;
+
+  document.getElementById('capstoneForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const alertBox = document.getElementById('capstoneAlert');
+    alertBox.classList.remove('show');
+
+    const body = {
+      title: document.getElementById('cTitle').value.trim(),
+      description: document.getElementById('cDescription').value.trim(),
+      repo_url: (type === 'code' ? document.getElementById('cMainLink').value : document.getElementById('cRepoExtra')?.value || '').trim(),
+      live_url: (type === 'code' ? document.getElementById('cLiveExtra').value : document.getElementById('cMainLink').value).trim(),
+      video_url: document.getElementById('cVideo').value.trim(),
+    };
+
+    const btn = document.getElementById('capstoneSubmitBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="loader"></span>';
+    const res = await api.post('/api/capstone/submit', body);
+    btn.disabled = false;
+    if (res?.success) {
+      showToast('Capstone submitted!', 'success');
+      loadCapstone();
+    } else {
+      alertBox.textContent = res?.error || 'Failed to submit.';
+      alertBox.classList.add('show');
+      btn.textContent = sub ? 'Resubmit Capstone' : 'Submit Capstone';
+    }
+  });
 }
 
 function calcModuleProgress(m) {

@@ -129,6 +129,14 @@
       "destination": "/pages/admin-mtt-roster.html"
     },
     {
+      "source": "/admin/capstones",
+      "destination": "/pages/admin-capstones.html"
+    },
+    {
+      "source": "/showcase",
+      "destination": "/pages/showcase.html"
+    },
+    {
       "source": "/mentor",
       "destination": "/pages/mentor-login.html"
     },
