@@ -20,6 +20,20 @@
 .submit-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;}
 .submit-overlay.show{display:flex;}
 .submit-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rxl);max-width:520px;width:100%;padding:26px;}
+#examSection{margin-top:28px;}
+.exam-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rxl);padding:24px;}
+.exam-card.locked{opacity:0.6;}
+.exam-meta{display:flex;gap:18px;flex-wrap:wrap;font-size:0.78rem;color:var(--muted);margin:10px 0 16px;}
+.exam-timer{position:sticky;top:12px;z-index:5;display:inline-flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:50px;padding:8px 16px;font-weight:700;font-size:0.9rem;margin-bottom:18px;}
+.exam-timer.low{color:#F43F5E;border-color:rgba(244,63,94,0.35);}
+.exam-q{background:var(--bg3);border-radius:var(--rl);padding:18px;margin-bottom:14px;}
+.exam-q .qtext{font-weight:600;font-size:0.9rem;margin-bottom:12px;}
+.exam-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:var(--trans);}
+.exam-opt:hover{border-color:var(--border3);}
+.exam-opt.selected{border-color:var(--brand-primary);background:rgba(124,110,247,0.08);}
+.exam-opt input{accent-color:var(--brand-primary);}
+.exam-result{text-align:center;padding:20px 0;}
+.exam-result .score{font-size:2.4rem;font-weight:900;letter-spacing:-0.03em;}
 #capstoneSection{margin-top:28px;}
 .capstone-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rxl);padding:24px;}
 .capstone-card.locked{opacity:0.6;}
@@ -61,6 +75,9 @@
 
   <!-- MODULES LIST -->
   <div id="modulesList"><div class="flex-center" style="padding:60px;"><span class="loader"></span></div></div>
+
+  <!-- EXAM -->
+  <div id="examSection"></div>
 
   <!-- CAPSTONE -->
   <div id="capstoneSection"></div>
@@ -166,6 +183,8 @@ async function loadCourses() {
   });
   const pct = totalLessons > 0 ? Math.round((doneLessons/totalLessons)*100) : 0;
   document.getElementById('overallProgress').textContent = `${pct}% complete`;
+  window.allModulesDone = totalLessons > 0 && doneLessons === totalLessons;
+  loadExam();
 
   function fmtUnlock(iso) {
     if (!iso) return '';
@@ -254,9 +273,160 @@ async function loadCourses() {
   if (qp.get('capstone') || location.hash === '#capstone') {
     setTimeout(() => document.getElementById('capstoneSection')?.scrollIntoView({ behavior: 'smooth' }), 200);
   }
+  if (location.hash === '#exam') {
+    setTimeout(() => document.getElementById('examSection')?.scrollIntoView({ behavior: 'smooth' }), 200);
+  }
 }
 
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── EXAM ──────────────────────────────────────────────────────────────
+let examTimer = null;
+
+async function loadExam() {
+  const el = document.getElementById('examSection');
+  if (!fellowTrackId) { el.innerHTML = ''; return; }
+  clearInterval(examTimer);
+
+  const exam = await api.get(`/api/modules/exam/${fellowTrackId}`);
+  if (!exam) { el.innerHTML = ''; return; } // no exam configured for this track
+
+  if (!window.allModulesDone) {
+    el.innerHTML = `
+      <div class="exam-card locked">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.3rem;">🔒</span>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;">Track Exam${exam.title ? ': ' + esc(exam.title) : ''}</div>
+            <div style="font-size:0.8rem;color:var(--muted);margin-top:2px;">Complete all your modules to unlock the exam.</div>
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  renderExamIntro(exam);
+}
+
+function renderExamIntro(exam) {
+  const el = document.getElementById('examSection');
+  const a = exam.my_attempt;
+  const attemptsLeft = exam.max_attempts ? Math.max(0, exam.max_attempts - exam.attempts_used) : null;
+  const canRetake = !a?.passed && (exam.max_attempts === null || attemptsLeft > 0);
+
+  el.innerHTML = `
+    <div class="exam-card" id="examIntro">
+      <div class="flex-between" style="margin-bottom:4px;">
+        <div style="font-weight:700;font-size:1.05rem;">📝 ${esc(exam.title)}</div>
+        ${a ? (a.passed ? '<span class="badge badge-approved">Passed ✓</span>' : '<span class="badge badge-danger">Not passed</span>') : ''}
+      </div>
+      ${exam.description ? `<p style="font-size:0.86rem;color:var(--text2);line-height:1.7;margin:10px 0;">${esc(exam.description)}</p>` : ''}
+      <div class="exam-meta">
+        <span>⏱ ${exam.duration_minutes} min</span>
+        <span>🎯 Pass at ${exam.pass_score}%</span>
+        <span>🔁 ${exam.attempts_used}${exam.max_attempts ? ` / ${exam.max_attempts} attempts used` : ' attempt(s) used'}</span>
+      </div>
+      ${exam.instructions ? `<div style="background:var(--bg3);border-radius:var(--r);padding:12px 14px;font-size:0.82rem;color:var(--muted);margin-bottom:16px;">${esc(exam.instructions)}</div>` : ''}
+      ${a ? `<div style="font-size:0.86rem;margin-bottom:14px;">Your last score: <strong>${a.score}%</strong></div>` : ''}
+      <div id="examStartAlert" class="alert alert-error"></div>
+      ${a?.passed
+        ? ''
+        : canRetake
+          ? `<button class="btn btn-primary" onclick="startExam('${exam.id}')" id="examStartBtn">${a ? 'Retake Exam' : 'Start Exam'}</button>`
+          : `<p style="font-size:0.82rem;color:var(--muted);">You've used all your attempts. Contact your mentor or admin if you need another chance.</p>`}
+    </div>`;
+}
+
+async function startExam(examId) {
+  const btn = document.getElementById('examStartBtn');
+  const alertBox = document.getElementById('examStartAlert');
+  alertBox.classList.remove('show');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loader"></span>'; }
+
+  const r = await api.post(`/api/modules/exam/${examId}/start`, {});
+  if (!r || r.error) {
+    alertBox.textContent = r?.error || 'Failed to start exam.';
+    alertBox.classList.add('show');
+    if (btn) { btn.disabled = false; btn.textContent = 'Start Exam'; }
+    return;
+  }
+  renderExamQuiz(r);
+}
+
+function renderExamQuiz(data) {
+  const el = document.getElementById('examSection');
+  const answers = {};
+  const expiresAt = new Date(data.expires_at).getTime();
+
+  el.innerHTML = `
+    <div class="exam-card">
+      <div class="exam-timer" id="examTimerDisplay">⏱ --:--</div>
+      ${data.resumed ? '<p style="font-size:0.78rem;color:var(--muted);margin-bottom:14px;">Resuming your in-progress attempt.</p>' : ''}
+      <div id="examQuestions">
+        ${data.questions.map((q, i) => `
+          <div class="exam-q">
+            <div class="qtext">${i + 1}. ${esc(q.question)}</div>
+            ${['A','B','C','D'].map((letter, oi) => q.options?.[oi] ? `
+              <label class="exam-opt" id="opt-${q.id}-${letter}">
+                <input type="radio" name="q-${q.id}" value="${letter}" onchange="selectAnswer('${q.id}','${letter}')"/>
+                <span><strong>${letter}.</strong> ${esc(q.options[oi])}</span>
+              </label>` : '').join('')}
+          </div>`).join('')}
+      </div>
+      <div id="examSubmitAlert" class="alert alert-error"></div>
+      <button class="btn btn-primary" onclick="submitExam('${data.attempt_id}')" id="examSubmitBtn">Submit Exam</button>
+    </div>`;
+
+  window._examAnswers = answers;
+
+  examTimer = setInterval(() => {
+    const msLeft = expiresAt - Date.now();
+    const display = document.getElementById('examTimerDisplay');
+    if (!display) { clearInterval(examTimer); return; }
+    if (msLeft <= 0) {
+      clearInterval(examTimer);
+      display.textContent = '⏱ Time up';
+      display.classList.add('low');
+      submitExam(data.attempt_id, true);
+      return;
+    }
+    const mins = Math.floor(msLeft / 60000), secs = Math.floor((msLeft % 60000) / 1000);
+    display.textContent = `⏱ ${mins}:${String(secs).padStart(2, '0')}`;
+    if (msLeft < 60000) display.classList.add('low');
+  }, 1000);
+}
+
+function selectAnswer(qId, letter) {
+  window._examAnswers[qId] = letter;
+  document.querySelectorAll(`[id^="opt-${qId}-"]`).forEach(el => el.classList.remove('selected'));
+  document.getElementById(`opt-${qId}-${letter}`)?.classList.add('selected');
+}
+
+async function submitExam(attemptId, auto = false) {
+  const btn = document.getElementById('examSubmitBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loader"></span>'; }
+  clearInterval(examTimer);
+
+  const r = await api.post(`/api/modules/exam/attempt/${attemptId}/submit`, { answers: window._examAnswers || {} });
+  if (!r?.success) {
+    const alertBox = document.getElementById('examSubmitAlert');
+    if (alertBox) { alertBox.textContent = r?.error || 'Failed to submit exam.'; alertBox.classList.add('show'); }
+    if (btn) { btn.disabled = false; btn.textContent = 'Submit Exam'; }
+    return;
+  }
+
+  document.getElementById('examSection').innerHTML = `
+    <div class="exam-card">
+      <div class="exam-result">
+        <div class="score" style="color:${r.passed ? '#06D6A0' : '#F43F5E'};">${r.score}%</div>
+        <div style="font-size:1rem;font-weight:700;margin-top:6px;">${r.timed_out ? '⏱ Time ran out' : r.passed ? '🎉 You passed!' : 'Not quite — you can retake it'}</div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-top:4px;">Pass mark: ${r.pass_score}%</div>
+        <button class="btn btn-outline" style="margin-top:18px;" onclick="loadExam()">Continue</button>
+      </div>
+    </div>`;
+  showToast(r.passed ? 'Exam passed!' : 'Exam submitted', r.passed ? 'success' : 'info');
+  loadCapstone(); // capstone/certificate eligibility depends on exam result — refresh it too
+}
 
 // ── CAPSTONE ──────────────────────────────────────────────────────────
 const CAPSTONE_LABELS = {
