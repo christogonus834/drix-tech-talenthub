@@ -1,0 +1,60 @@
+# Auto-generated from vercel.json — one rule per route, in the same order.
+# This site was originally built for Vercel (vercel.json), which LiteSpeed/Apache
+# ignores entirely. This .htaccess is the LiteSpeed/cPanel equivalent.
+
+RewriteEngine On
+RewriteBase /
+# Homepage FIRST — must run before the passthrough check below, because the request path
+# for "/" always resolves to a real, existing folder, which would otherwise match the
+# passthrough rule and stop here with a raw directory listing instead of your homepage.
+RewriteRule ^$ /pages/index.html [L]
+
+# Let real files and folders (css, js, images, pages/*.html itself) pass through untouched.
+# Without this, EVERY request — including your actual asset files — would get rewritten.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+RewriteRule ^register/?$ /pages/register.html [L]
+RewriteRule ^login/?$ /pages/login.html [L]
+RewriteRule ^forgot-password/?$ /pages/forgot-password.html [L]
+RewriteRule ^privacy/?$ /pages/privacy.html [L]
+RewriteRule ^verify/?$ /pages/verify.html [L]
+RewriteRule ^terms/?$ /pages/terms.html [L]
+RewriteRule ^contact/?$ /pages/contact.html [L]
+RewriteRule ^blog/?$ /pages/blog.html [L]
+RewriteRule ^dashboard/?$ /pages/dashboard.html [L]
+RewriteRule ^dashboard/courses/?$ /pages/dashboard-courses.html [L]
+RewriteRule ^dashboard/community/?$ /pages/community.html [L]
+RewriteRule ^dashboard/leaderboard/?$ /pages/leaderboard.html [L]
+RewriteRule ^dashboard/certificates/?$ /pages/certificates.html [L]
+RewriteRule ^dashboard/messages/?$ /pages/dashboard-messages.html [L]
+RewriteRule ^dashboard/profile/?$ /pages/profile.html [L]
+RewriteRule ^admin/?$ /pages/admin-login.html [L]
+RewriteRule ^admin/login/?$ /pages/admin-login.html [L]
+RewriteRule ^admin/dashboard/?$ /pages/admin-dashboard.html [L]
+RewriteRule ^admin/fellows/?$ /pages/admin-fellows.html [L]
+RewriteRule ^admin/courses/?$ /pages/admin-courses.html [L]
+RewriteRule ^admin/cohorts/?$ /pages/admin-cohorts.html [L]
+RewriteRule ^admin/announcements/?$ /pages/admin-announcements.html [L]
+RewriteRule ^admin/submissions/?$ /pages/admin-submissions.html [L]
+RewriteRule ^admin/settings/?$ /pages/admin-settings.html [L]
+RewriteRule ^admin/certificates/?$ /pages/admin-certificates.html [L]
+RewriteRule ^admin/messages/?$ /pages/admin-messages.html [L]
+RewriteRule ^admin/blog/?$ /pages/admin-blog.html [L]
+RewriteRule ^admin/exam/?$ /pages/admin-exam.html [L]
+RewriteRule ^admin/mentors/?$ /pages/admin-mentors.html [L]
+RewriteRule ^admin/checkins/?$ /pages/admin-checkins.html [L]
+RewriteRule ^admin/mtt-roster/?$ /pages/admin-mtt-roster.html [L]
+RewriteRule ^admin/capstones/?$ /pages/admin-capstones.html [L]
+RewriteRule ^admin/team/?$ /pages/admin-team.html [L]
+RewriteRule ^admin/audit-log/?$ /pages/admin-audit-log.html [L]
+RewriteRule ^showcase/?$ /pages/showcase.html [L]
+RewriteRule ^mentor/?$ /pages/mentor-login.html [L]
+RewriteRule ^mentor/login/?$ /pages/mentor-login.html [L]
+RewriteRule ^mentor/dashboard/?$ /pages/mentor-dashboard.html [L]
+RewriteRule ^portfolio/([^/]+)/?$ /pages/portfolio.html?slug=$1 [L,QSA]
+
+# Anything else that doesn't match a real file or a route above: fall back to the
+# homepage rather than a bare LiteSpeed 404 page.
+ErrorDocument 404 /pages/index.html

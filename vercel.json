@@ -133,6 +133,14 @@
       "destination": "/pages/admin-capstones.html"
     },
     {
+      "source": "/admin/team",
+      "destination": "/pages/admin-team.html"
+    },
+    {
+      "source": "/admin/audit-log",
+      "destination": "/pages/admin-audit-log.html"
+    },
+    {
       "source": "/showcase",
       "destination": "/pages/showcase.html"
     },

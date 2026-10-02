@@ -33,6 +33,8 @@
     <a href="/admin/certificates" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></span>Certificates</a>
     <a href="/admin/messages" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>Messages</a>
     <div class="sidebar-section-label">System</div>
+    <a href="/admin/team" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Team</a>
+    <a href="/admin/audit-log" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></span>Audit Log</a>
     <a href="/admin/settings" class="sidebar-link"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>Settings</a>
   </nav>
   <div class="sidebar-bottom"><button onclick="adminLogout()" class="btn btn-outline w-full btn-sm">Sign Out</button></div>
@@ -63,6 +65,18 @@
       <div class="form-group"><label class="form-label">Points Reward</label><input type="number" class="form-control" id="examPoints" value="50" min="0"/></div>
     </div>
     <div class="form-group" style="margin-bottom:0;"><label class="form-label">Instructions</label><textarea class="form-control" id="examInstructions" rows="2" placeholder="Instructions shown to students before they start..."></textarea></div>
+  </div>
+
+  <!-- UPLOAD & EXTRACT -->
+  <div class="card mb-6">
+    <div style="font-weight:700;font-size:0.9rem;margin-bottom:6px;">Upload questions from a document</div>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">Already typed your questions and answers in a PDF or Word doc, with the correct answer marked somehow (bold, "Answer: B", or a separate answer key)? Upload it and we'll pull them straight into the fields below — review and fix anything before adding. This only reformats what you wrote; it never invents new questions.</p>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <input type="file" id="examDocInput" accept=".pdf,.doc,.docx" style="max-width:280px;"/>
+      <button class="btn btn-outline btn-sm" onclick="extractFromDoc()" id="extractBtn">Extract Questions</button>
+    </div>
+    <div id="extractAlert" class="alert alert-error" style="margin-top:10px;"></div>
+    <div id="extractReview" style="display:none;margin-top:16px;"></div>
   </div>
 
   <!-- QUESTIONS -->
@@ -158,6 +172,76 @@ function renderQuestions() {
         <input type="number" class="form-control" style="width:120px;" value="${q.points||1}" min="1" onchange="updateQ(${i},'points',parseInt(this.value)||1)"/>
       </div>
     </div>`).join('');
+}
+
+// ── Upload & extract questions from a PDF/Word doc ─────────────────────
+let extracted = [];
+
+async function extractFromDoc() {
+  const input = document.getElementById('examDocInput');
+  const alertBox = document.getElementById('extractAlert');
+  alertBox.classList.remove('show');
+  if (!input.files?.[0]) { alertBox.textContent = 'Choose a file first.'; alertBox.classList.add('show'); return; }
+
+  const btn = document.getElementById('extractBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="loader"></span> Reading document…';
+
+  const formData = new FormData();
+  formData.append('file', input.files[0]);
+  const r = await api.upload('/api/exam-extract', formData, true);
+
+  btn.disabled = false; btn.textContent = 'Extract Questions';
+  if (!r?.success) {
+    alertBox.textContent = r?.error || 'Failed to extract questions from that file.';
+    alertBox.classList.add('show');
+    return;
+  }
+
+  extracted = r.questions;
+  if (r.truncated) showToast('Document was long — only the first part was processed. You can upload the rest separately.', 'info');
+  renderExtractReview();
+}
+
+function renderExtractReview() {
+  const box = document.getElementById('extractReview');
+  if (!extracted.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+
+  box.innerHTML = `
+    <div style="font-size:0.82rem;font-weight:700;margin-bottom:10px;">Found ${extracted.length} question${extracted.length===1?'':'s'} — review before adding:</div>
+    ${extracted.map((q, i) => `
+      <div class="q-card" style="border-color:var(--brand-secondary);">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
+          <div class="q-num">Extracted ${i+1}</div>
+          <button onclick="removeExtracted(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;" title="Discard this one">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="form-group"><textarea class="form-control" rows="2" onchange="extracted[${i}].question=this.value">${q.question}</textarea></div>
+        ${['A','B','C','D'].map((letter, oi) => `
+          <div class="option-row">
+            <div class="option-label ${q.correct_answer === letter ? 'correct' : ''}" onclick="setExtractedCorrect(${i},'${letter}')" title="Mark as correct">${letter}</div>
+            <input type="text" class="form-control" style="flex:1;" value="${q.options?.[oi]||''}" onchange="extracted[${i}].options[${oi}]=this.value"/>
+          </div>`).join('')}
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:4px;">
+          Correct: <strong style="color:var(--brand-accent);">${q.correct_answer ? `Option ${q.correct_answer}` : 'Not detected — click a letter'}</strong>
+        </div>
+      </div>`).join('')}
+    <button class="btn btn-primary btn-sm" onclick="addExtractedToExam()">Add ${extracted.length} Question${extracted.length===1?'':'s'} to Exam</button>
+    <button class="btn btn-outline btn-sm" onclick="extracted=[];renderExtractReview();">Discard All</button>`;
+}
+
+function setExtractedCorrect(i, letter) { extracted[i].correct_answer = letter; renderExtractReview(); }
+function removeExtracted(i) { extracted.splice(i, 1); renderExtractReview(); }
+
+function addExtractedToExam() {
+  extracted.forEach(q => questions.push({ question: q.question, options: q.options, correct_answer: q.correct_answer || '', points: 1 }));
+  showToast(`${extracted.length} question(s) added — don't forget to Save.`, 'success');
+  extracted = [];
+  renderExtractReview();
+  document.getElementById('examDocInput').value = '';
+  renderQuestions();
+  setTimeout(() => document.getElementById('questionsList')?.scrollIntoView({ behavior: 'smooth' }), 100);
 }
 
 function addQuestion() {
