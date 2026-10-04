@@ -49,6 +49,7 @@
     </div>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-outline" onclick="addQuestion()">+ Add Question</button>
+      <button class="btn" id="deleteExamBtn" style="display:none;background:rgba(244,63,94,0.1);color:var(--brand-danger);border:1px solid rgba(244,63,94,0.2);" onclick="deleteExam()">Delete Exam</button>
       <button class="btn btn-primary" onclick="saveExam()">Save Exam</button>
     </div>
   </div>
@@ -125,12 +126,39 @@ async function loadExam() {
       points: q.points || 1
     }));
     renderQuestions();
+    document.getElementById('deleteExamBtn').style.display = '';
   } else {
     // New exam defaults
     document.getElementById('examTitle').value = `${decodeURIComponent(trackName)} — Final Assessment`;
     questions = [];
     renderQuestions();
+    document.getElementById('deleteExamBtn').style.display = 'none';
   }
+}
+
+async function deleteExam() {
+  confirmAction(
+    'Delete this exam? This removes its questions and every fellow\'s attempt history for it. Any fellow currently blocked on "pass the exam" will no longer need one for this track — capstone and certificate requirements adjust automatically.',
+    async () => {
+      const btn = document.getElementById('deleteExamBtn');
+      btn.disabled = true; btn.innerHTML = '<span class="loader"></span>';
+      const r = await api.delete(`/api/modules/admin/exam/${trackId}`, true);
+      btn.disabled = false; btn.textContent = 'Delete Exam';
+      if (r?.success) {
+        showToast('Exam deleted.', 'success');
+        document.getElementById('examTitle').value = `${decodeURIComponent(trackName)} — Final Assessment`;
+        document.getElementById('examDuration').value = 60;
+        document.getElementById('examPassScore').value = 70;
+        document.getElementById('examPoints').value = 50;
+        document.getElementById('examInstructions').value = '';
+        questions = [];
+        renderQuestions();
+        btn.style.display = 'none';
+      } else {
+        showToast(r?.error || 'Failed to delete exam.', 'error');
+      }
+    }
+  );
 }
 
 function renderQuestions() {
