@@ -71,7 +71,7 @@
   <!-- UPLOAD & EXTRACT -->
   <div class="card mb-6">
     <div style="font-weight:700;font-size:0.9rem;margin-bottom:6px;">Upload questions from a document</div>
-    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">Already typed your questions and answers in a PDF or Word doc, with the correct answer marked somehow (bold, "Answer: B", or a separate answer key)? Upload it and we'll pull them straight into the fields below — review and fix anything before adding. This only reformats what you wrote; it never invents new questions.</p>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">Already typed your questions and answers in a PDF or Word doc? Upload it and we'll pull them straight into the fields below — review and fix anything before adding. Works best when each question starts with a number ("1.") and each option starts with a letter ("A)"), with the correct one marked via bold, an "Answer: B" line, or a separate answer key at the end.</p>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
       <input type="file" id="examDocInput" accept=".pdf,.doc,.docx" style="max-width:280px;"/>
       <button class="btn btn-outline btn-sm" onclick="extractFromDoc()" id="extractBtn">Extract Questions</button>
